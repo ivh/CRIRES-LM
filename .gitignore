@@ -1,5 +1,6 @@
 # Data files
 *.fits
+!/*_tw.fits
 *.sqlite
 *.npz
 
