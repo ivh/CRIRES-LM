@@ -1,4 +1,8 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["numpy", "astropy", "scipy", "matplotlib"]
+# ///
 """Measure actual nod throw from combinedA frames by fitting Gaussians to A/B traces."""
 
 import numpy as np

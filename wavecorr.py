@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["numpy", "astropy", "matplotlib"]
+# ///
 """Update wavelength scale in _tellcorr.fits using vipere solutions + 2D interpolation.
 
 For orders with a vipere fit: uses the fitted wavelength polynomial directly.

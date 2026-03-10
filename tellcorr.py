@@ -1,4 +1,8 @@
 #!/usr/bin/env python
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["numpy", "astropy", "matplotlib"]
+# ///
 """Telluric-correct a CRIRES+ extractedA/B spectrum using vipere.
 
 Takes a reduction directory as input, processes both extractedA and extractedB,
