@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}{{ obs.object }} {{ obs.ins_wlen_id }} - CRIRES+ Browser{% endblock %}
+{% block content %}
+<div class="nav-links">
+    <a class="back" href="/">&larr; All observations</a>
+    {% if prev_dir %}<a href="/obs/{{ prev_dir }}">&larr; Prev ({{ obs.ins_wlen_id }})</a>{% endif %}
+    {% if next_dir %}<a href="/obs/{{ next_dir }}">Next ({{ obs.ins_wlen_id }}) &rarr;</a>{% endif %}
+</div>
+
+<h1>{{ obs.object }} &mdash; {{ obs.ins_wlen_id }}</h1>
+
+<dl class="meta-grid">
+    <dt>Date</dt><dd class="mono">{{ obs.date_obs }}</dd>
+    <dt>Setting</dt><dd class="mono">{{ obs.ins_wlen_id }} ({{ obs.ins_wlen_cwlen }} nm)</dd>
+    <dt>Programme</dt><dd class="mono">{{ obs.prog_id }}</dd>
+    <dt>Slit width</dt><dd>{{ obs.ins_slit1_wid }}"</dd>
+    <dt>DIT x NDIT</dt><dd class="mono">{{ obs.det_dit }}s x {{ obs.det_ndit }}</dd>
+    <dt>Frames</dt><dd>{{ obs.n_frames }} ({{ obs.n_A }}A + {{ obs.n_B }}B)</dd>
+    <dt>Total exposure</dt><dd>{{ obs.total_exposure }}s</dd>
+    <dt>Status</dt>
+    <dd>
+        {% if obs.tellcorr %}
+        <span class="status green"></span> Telluric-corrected
+        {% elif obs.extracted %}
+        <span class="status yellow"></span> Pipeline-extracted
+        {% else %}
+        <span class="status red"></span> Not reduced
+        {% endif %}
+    </dd>
+</dl>
+
+{% if obs.tellcorr %}
+<h2>Spectrum</h2>
+<div id="spectrum-plot" style="height:550px; display:flex; align-items:center; justify-content:center; color:#999;">Loading spectrum...</div>
+<script>
+    fetch('/api/spectrum/{{ obs.dirname }}')
+        .then(r => r.json())
+        .then(fig => {
+            var el = document.getElementById('spectrum-plot');
+            el.textContent = '';
+            el.style.display = 'block';
+            if (fig.data && fig.data.length > 0) {
+                Plotly.newPlot(el, fig.data, fig.layout, {responsive: true});
+            } else {
+                el.textContent = 'No spectrum data available';
+            }
+        });
+</script>
+{% elif obs.extracted %}
+<h2>Spectrum</h2>
+<p style="color:#999; padding:2rem 0;">Telluric correction not yet run for this observation.</p>
+{% else %}
+<h2>Spectrum</h2>
+<p style="color:#999; padding:2rem 0;">Reduction not yet run for this observation.</p>
+{% endif %}
+
+{% if downloads %}
+<h2>Downloads</h2>
+<ul class="dl-list">
+    {% for f in downloads %}
+    <li><a href="/files/{{ obs.dirname }}/{{ f }}" download>{{ f }}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+{% if images %}
+<h2>Diagnostic plots</h2>
+<div class="images-grid">
+    {% for img in images %}
+    <a href="/files/{{ obs.dirname }}/{{ img }}" target="_blank">
+        <img src="/files/{{ obs.dirname }}/{{ img }}" alt="{{ img }}" loading="lazy">
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+<h2>Raw frames</h2>
+<table class="frames-table">
+    <thead>
+        <tr><th>DP ID</th><th>Nod</th><th>Date</th><th>DIT</th><th>NDIT</th></tr>
+    </thead>
+    <tbody>
+        {% for f in obs.frames %}
+        <tr>
+            <td class="mono">{{ f.dp_id }}</td>
+            <td>{{ f.nodpos }}</td>
+            <td class="mono">{{ f.date_obs }}</td>
+            <td class="mono">{{ f.det_dit }}s</td>
+            <td class="mono">{{ f.det_ndit }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

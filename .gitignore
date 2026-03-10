@@ -1,0 +1,33 @@
+# Data files
+*.fits
+*.sqlite
+*.npz
+
+# Vipere output
+*.par.dat
+*.rvo.dat
+*.json
+
+# Plots and images
+*.png
+
+# Logs
+*.log
+esorex.log
+
+# Raw data directories
+raw/
+flats/raw/
+
+# Reduced data products (huge, regenerable)
+reduced/
+
+# Python
+__pycache__/
+*.pyc
+
+# macOS
+.DS_Store
+
+# vipere residual directories
+res/

@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>CRIRES+ L/M-band data browser</h1>
+
+<form class="filters" hx-get="/" hx-target="#results" hx-push-url="true" hx-trigger="change, search, keyup changed delay:300ms from:#q">
+    <div>
+        <label for="q">Search</label>
+        <input type="search" name="q" id="q" placeholder="target, prog..." value="{{ sel_q or '' }}" autocomplete="off">
+    </div>
+    <div>
+        <label for="object">Target</label>
+        <select name="object" id="object">
+            <option value="">All targets</option>
+            {% for o in objects %}
+            <option value="{{ o }}" {{ 'selected' if sel_object == o }}>{{ o }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="setting">Setting</label>
+        <select name="setting" id="setting">
+            <option value="">All settings</option>
+            {% for s in settings %}
+            <option value="{{ s }}" {{ 'selected' if sel_setting == s }}>{{ s }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="prog_id">Programme</label>
+        <select name="prog_id" id="prog_id">
+            <option value="">All programmes</option>
+            {% for p in prog_ids %}
+            <option value="{{ p }}" {{ 'selected' if sel_prog_id == p }}>{{ p }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div>
+        <label for="status">Status</label>
+        <select name="status" id="status">
+            <option value="">Any</option>
+            <option value="extracted" {{ 'selected' if sel_status == 'extracted' }}>Extracted</option>
+            <option value="tellcorr" {{ 'selected' if sel_status == 'tellcorr' }}>Telluric-corrected</option>
+        </select>
+    </div>
+    <span class="count" id="count">{{ n_total }} observations</span>
+</form>
+
+<div id="results">
+{% include "obs_table.html" %}
+</div>
+{% endblock %}

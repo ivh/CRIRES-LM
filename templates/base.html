@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}CRIRES+ L/M Browser{% endblock %}</title>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <style>
+        :root { --bg: #fafafa; --fg: #222; --accent: #2563eb; --border: #ddd; --row-hover: #f0f4ff; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; padding: 1rem 2rem; }
+        h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.2rem; margin: 1rem 0 0.5rem; }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .filters { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; padding: 0.75rem; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+        .filters label { font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 2px; }
+        .filters select, .filters input { font-size: 0.85rem; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; }
+        .filters .count { font-size: 0.85rem; color: #666; margin-left: auto; align-self: center; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+        th { text-align: left; padding: 8px 10px; background: #f5f5f5; border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
+        td { padding: 6px 10px; border-bottom: 1px solid #eee; white-space: nowrap; }
+        tr:hover td { background: var(--row-hover); }
+        .mono { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.8rem; }
+        .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
+        .status.green { background: #22c55e; }
+        .status.yellow { background: #eab308; }
+        .status.red { background: #ccc; }
+
+        .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem; margin-bottom: 1rem; padding: 0.75rem; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+        .meta-grid dt { font-weight: 600; font-size: 0.8rem; color: #666; }
+        .meta-grid dd { font-size: 0.9rem; margin-bottom: 0.5rem; }
+
+        .images-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 1rem; margin: 1rem 0; }
+        .images-grid img { width: 100%; border: 1px solid var(--border); border-radius: 4px; }
+        .images-grid a { display: block; }
+
+        .dl-list { list-style: none; padding: 0; }
+        .dl-list li { padding: 4px 0; }
+        .dl-list li a { font-family: monospace; font-size: 0.85rem; }
+
+        .frames-table { margin-top: 0.5rem; }
+        .frames-table td, .frames-table th { padding: 4px 8px; }
+
+        .back { display: inline-block; margin-bottom: 0.75rem; font-size: 0.9rem; }
+        .nav-links { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+    </style>
+</head>
+<body>
+    {% block content %}{% endblock %}
+</body>
+</html>
