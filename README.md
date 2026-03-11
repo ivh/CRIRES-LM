@@ -20,9 +20,15 @@ From these measurements:
 
 ### Stage 2: Science reduction with telluric correction
 
-All 5239 AB pairs and their combined per-template spectra are reduced with `esorex cr2res_obs_nodding` using the corrected tracing tables (with slit tilt and updated wavelengths). Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, updating the wavelength solution simultaneously. For orders where vipere cannot fit (no telluric features, CO2-saturated regions), the wavelength correction is interpolated from a 2D polynomial fitted to the orders that do have vipere solutions.
+All 5239 AB pairs and their combined per-template spectra are reduced with `esorex cr2res_obs_nodding` using the corrected tracing tables (with slit tilt and updated wavelengths). Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, followed by `wavecorr.py` which updates the wavelength scale: fitted orders get the vipere wavelength polynomial directly, while unfitted orders (no telluric features, CO2-saturated regions) get wavelengths interpolated from a 2D polynomial surface fitted to the vipere solutions per chip.
 
-The reduced and telluric-corrected spectra are browsable and downloadable via a web app (link TBD).
+The reduced and telluric-corrected spectra are browsable and downloadable via a [web app](https://neon.physics.uu.se/crires-lm/).
+
+## Web app
+
+The data browser shows all observations that have telluric-corrected spectra. The front page table is filterable by target, setting, and programme, and sortable by clicking column headers.
+
+Each observation page shows the combined per-template spectrum (interactive Plotly plot), diagnostic plots, and download links for the `_tellcorr.fits` files. The raw frames table groups frames into AB pairs; clicking a pair navigates to the individual pair reduction, which has its own spectrum, plots, and downloads.
 
 ## Data scale
 
@@ -33,11 +39,10 @@ The reduced and telluric-corrected spectra are browsable and downloadable via a 
 ## Repository structure
 
 ```
-*.py                   scripts (fetch, reduce, telluric correct, webapp)
+*.py                   scripts (fetch, reduce, telluric correct, wavecal, webapp)
 *_tw.fits              tracing/wavelength tables per setting (calibration products)
 cr2res_obs_nodding.rc  esorex recipe configuration
-sof/                   SOF files for flat reduction
-flats/sof/             SOF files for flat reduction (deep flats)
+flats/sof/             SOF files for flat reduction
 tellurics/             telluric standard reductions, tilt + wavecal scripts
 templates/             HTML templates for the inspection webapp
 ```

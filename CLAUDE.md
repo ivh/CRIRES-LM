@@ -22,7 +22,9 @@ Reduction of all public CRIRES+ L-band (2.8-4.2 um) and M-band (4.2-5.5 um) scie
 - `raw/` — all fetched science frames (on server)
 - `{setting}_tw.fits` — tracing/wavelength tables per setting, updated with vipere wavelengths and slit tilt
 - `make_reduction_sofs.py` — generates `reduced/` directory tree with SOF files for all 5239 AB pairs
+- `make_combined_sofs.py` — generates combined SOF files (all frames per template start in one SOF), balances A/B counts, skips single-nod sequences
 - `reduced/{object}_{setting}_{tpl_start}_{pair}/` — one dir per AB pair, each with `nodd.sof`
+- `reduced/{object}_{setting}_{tpl_start}/` — combined dir (all frames from one template), no `_N` suffix
 
 ## esorex cr2res usage
 - `esorex cr2res_cal_flat sof` — reduce flats (run from dir containing the data)
@@ -201,11 +203,12 @@ All hot B/O-type stars with clean continua in L/M band:
 
 ### Setup (`make_reduction_sofs.py`)
 - Pairs A+B frames from LMscience.sqlite using greedy matching within each template sequence
-- 5239 AB pairs across 16 settings, 442 standard nodding sequences
+- 5239 AB pairs across 16 settings, 414 combined template sequences
 - Directory structure: `reduced/{object}_{setting}_{tpl_start}_{pair}/nodd.sof`
 - SOF references: `../../raw/{dp_id}.fits`, `../../{setting}_tw.fits`, `../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits`
 - 229 frames unpaired (odd counts or all-same nod position)
 - Non-standard templates (raster, spectroastrometry, 12 sequences) excluded
+- Some sequences labeled as nodding have only one nod position (Jupiter, Venus, Moon scans) — these fail `cr2res_obs_nodding` (nod throw=0 or unequal A/B). Removed from database or skipped by `make_combined_sofs.py`
 
 ### Pairs per setting
 - L3244: 9, L3262: 473, L3302: 404, L3340: 358, L3377: 353, L3412: 30, L3426: 92
@@ -218,15 +221,19 @@ All hot B/O-type stars with clean continua in L/M band:
 - Usage: `esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof`
 - CLI flags override config file values
 
-### Batch reduction + telluric correction
+### Batch reduction + telluric + wavelength correction
 ```
-ls reduced/*/nodd.sof | parallel -j 4 --bar 'cd {//} && esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof 2>&1 > esorex.log && cd ../.. && uv run --with astropy --with matplotlib tellcorr.py {//}'
+ls reduced/*/nodd.sof | parallel -j 4 --bar 'cd {//} && esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof 2>&1 > esorex.log && cd ../.. && uv run tellcorr.py {//} && uv run wavecorr.py {//}'
+```
+To skip already-completed dirs, filter before piping to parallel:
+```
+ls reduced/*/nodd.sof | sed 's|/nodd.sof||' | while read d; do [ -e "$d/cr2res_obs_nodding_extractedA_tellcorr.fits" ] || echo "$d"; done | parallel -j 6 --bar 'cd {} && esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof 2>&1 > esorex.log && cd ../.. && uv run tellcorr.py {} && uv run wavecorr.py {}'
 ```
 
 ## Telluric correction script (`tellcorr.py`)
 
 ### Usage
-- `uv run --with astropy --with matplotlib tellcorr.py <reduction_dir>`
+- `uv run tellcorr.py <reduction_dir>`
 - Takes a reduction directory, processes both extractedA and extractedB
 - Runs vipere in a temp directory, reconstructs model from residuals, writes corrected FITS + diagnostic plots
 
@@ -238,7 +245,7 @@ ls reduced/*/nodd.sof | parallel -j 4 --bar 'cd {//} && esorex --recipe-config=.
 ### Output FITS columns (per order, per chip extension)
 - `XX_01_SPEC` — telluric-corrected spectrum (ADU), `= original / TELLUR`
 - `XX_01_ERR` — error (unchanged from pipeline)
-- `XX_01_WL` — wavelength in nm (updated from vipere fit where available, pipeline otherwise)
+- `XX_01_WL` — wavelength in nm (pipeline; updated by wavecorr.py after tellcorr)
 - `XX_01_TELLUR` — telluric transmission (0-1, from vipere model / continuum)
 - `XX_01_CONT` — fitted continuum polynomial (ADU)
 - `CONT * TELLUR` reconstructs the full vipere model in data units
@@ -257,7 +264,76 @@ ls reduced/*/nodd.sof | parallel -j 4 --bar 'cd {//} && esorex --recipe-config=.
 - `--oset` CLI flag to override vipere order range
 - `TELLCORR_KEEP_WORKDIR=1` env var to keep temp directory for debugging
 
-### Diagnostic plots
+### Sidecar files (for wavecorr.py)
+- `tellfit_{A,B}.par.dat` — copy of vipere par.dat
+- `tellfit_{A,B}_xcen.json` — map of `"chip_order": xcen` for each fitted order
+
+### Diagnostic plots (tellcorrAB)
 - Top panel: uncorrected A (blue) and B (orange) spectra with vipere model overlay (black = CONT * TELLUR)
 - Bottom panel (narrower): residuals (data - model) for A and B
 - Each model is scaled independently per nod position
+
+### Error handling
+- Empty CHIP extensions (bad esorex output): detected, bad file deleted, skip gracefully
+- Missing orders per chip (e.g. M4211 CHIP1 missing order 8): skipped in plots
+
+## Wavelength correction script (`wavecorr.py`)
+
+### Usage
+- `uv run wavecorr.py <reduction_dir>`
+- Reads tellfit sidecar files from tellcorr.py, updates WL columns in _tellcorr.fits
+
+### Method
+- **Fitted orders**: vipere wavelength polynomial applied directly (Angstrom -> nm)
+- **Unfitted orders**: 2D polynomial fit to vipere wavelengths wl(x, order_number) per chip, then evaluated at the unfitted order numbers
+- 2D fit: degree 2 in pixel, degree 2 in order number (9 terms), fitted to 20 sample points per fitted order
+- Each chip fitted independently
+- Diagnostic 3D plot saved as `wavecorr_chip{N}_{A,B}.png` showing surface + data points + order lines (green=fitted, red dashed=interpolated)
+
+### FITS extension access
+- Always use `hdul['CHIP{N}.INT1']` not `hdul[N]` — combined reductions may have extra extensions shifting numeric indices
+
+## Trace diagnostic script (`plot_ABtraces.py`)
+
+### Usage
+- `uv run plot_ABtraces.py <reduction_dir>`
+- Plots `abs(combinedA)` images for all 3 chips with A and B extraction windows overlaid
+- Output: `ABtraces.png` in the reduction directory
+- Extraction height read from `ESO PRO REC1 PARAM{N}` headers in trace_wave_A.fits
+- Traces shown as black/white alternating dashed lines (visible on any background)
+
+## Web app (`webapp.py`)
+
+### Architecture
+- FastAPI + Jinja2 templates + HTMX for filtering + Plotly for interactive spectra
+- Reads metadata from `LMscience.sqlite` (view `observations` created on first run with `CREATE VIEW IF NOT EXISTS`)
+- Serves files from `reduced/` directories (PNGs and tellcorr FITS)
+- Run locally: `uv run webapp.py --reload`, deployed via systemd (`crires-lm-webapp.service`)
+
+### URL routing
+- `/` — filterable/sortable table of all observations with tellcorr spectra
+- `/obs/{dirname}` — observation page (combined template or individual pair)
+- `/about` — renders README.md via `markdown` library
+- `/api/spectrum/{dirname}` — JSON endpoint returning Plotly figure data
+- `/files/{dirname}/{filename}` — serves PNGs and FITS from `reduced/`
+
+### Reverse proxy support
+- `--root-path /crires-lm` sets the ASGI root_path, exposed to templates as `{{ base }}`
+- All template URLs use `{{ base }}` prefix; empty string when running locally
+- Caddy config uses `handle_path` (not `handle`) to strip the prefix before forwarding
+
+### Directory resolution
+- Combined template dirs: `{object}_{setting}_{tpl_short}` — mapped 1:1 to tpl_start via `_dir_to_tpl`
+- Pair dirs: `{object}_{setting}_{tpl_short}_{N}` — resolved by stripping `_N` suffix
+- `_resolve_dirname()` handles both, returns `(tpl_start, base_dirname, pair_num)`
+
+### AB pair display
+- `_pair_frames()` does greedy A-B matching (same algorithm as `make_reduction_sofs.py`)
+- Pairs shown with alternating background colors, joint hover highlight via JS
+- Clicking either row of a pair navigates to `/obs/{dirname}_{N}`
+- Pair pages show only their 2 frames, with back-link to combined template page
+
+### Front page table
+- Client-side sorting via JS on column headers (text or numeric)
+- HTMX-powered filtering (target, setting, programme, search)
+- Only shows observations with `_tellcorr.fits` present
