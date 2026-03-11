@@ -290,7 +290,6 @@ def index(
     object: str = Query(None),
     setting: str = Query(None),
     prog_id: str = Query(None),
-    status: str = Query(None),
 ):
     conn = get_db()
 
@@ -329,9 +328,7 @@ def index(
         d = dict(row)
         d["dirname"] = _tpl_to_dir.get(d["tpl_start"], "")
         d.update(reduction_status(d["dirname"]))
-        if status == "tellcorr" and not d["tellcorr"]:
-            continue
-        if status == "extracted" and not d["extracted"]:
+        if not d["tellcorr"]:
             continue
         observations.append(d)
 
@@ -345,7 +342,6 @@ def index(
         "sel_object": object,
         "sel_setting": setting,
         "sel_prog_id": prog_id,
-        "sel_status": status,
         "n_total": len(observations),
     }
 
@@ -465,7 +461,7 @@ def observation(request: Request, dirname: str):
     images = sorted(p.name for p in dp.glob("*.png")) if dp.exists() else []
     downloads = sorted(
         p.name for p in dp.iterdir()
-        if p.suffix == ".fits" and "extracted" in p.name
+        if p.name.endswith("_tellcorr.fits")
     ) if dp.exists() else []
 
     return templates.TemplateResponse("observation.html", {

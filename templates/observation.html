@@ -21,19 +21,8 @@
     <dt>DIT x NDIT</dt><dd class="mono">{{ obs.det_dit }}s x {{ obs.det_ndit }}</dd>
     <dt>Frames</dt><dd>{{ obs.n_frames }} ({{ obs.n_A }}A + {{ obs.n_B }}B)</dd>
     <dt>Total exposure</dt><dd>{{ obs.total_exposure }}s</dd>
-    <dt>Status</dt>
-    <dd>
-        {% if obs.tellcorr %}
-        <span class="status green"></span> Telluric-corrected
-        {% elif obs.extracted %}
-        <span class="status yellow"></span> Pipeline-extracted
-        {% else %}
-        <span class="status red"></span> Not reduced
-        {% endif %}
-    </dd>
 </dl>
 
-{% if obs.tellcorr %}
 <h2>Spectrum</h2>
 <div id="spectrum-plot" style="height:550px; display:flex; align-items:center; justify-content:center; color:#999;">Loading spectrum...</div>
 <script>
@@ -50,13 +39,6 @@
             }
         });
 </script>
-{% elif obs.extracted %}
-<h2>Spectrum</h2>
-<p style="color:#999; padding:2rem 0;">Telluric correction not yet run for this observation.</p>
-{% else %}
-<h2>Spectrum</h2>
-<p style="color:#999; padding:2rem 0;">Reduction not yet run for this observation.</p>
-{% endif %}
 
 {% if downloads %}
 <h2>Downloads</h2>

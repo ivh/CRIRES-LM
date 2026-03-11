@@ -37,14 +37,6 @@
             {% endfor %}
         </select>
     </div>
-    <div>
-        <label for="status">Status</label>
-        <select name="status" id="status">
-            <option value="">Any</option>
-            <option value="extracted" {{ 'selected' if sel_status == 'extracted' }}>Extracted</option>
-            <option value="tellcorr" {{ 'selected' if sel_status == 'tellcorr' }}>Telluric-corrected</option>
-        </select>
-    </div>
     <span class="count" id="count">{{ n_total }} observations</span>
 </form>
 

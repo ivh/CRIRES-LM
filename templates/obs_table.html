@@ -2,7 +2,6 @@
 <table>
     <thead>
         <tr>
-            <th>Status</th>
             <th>Target</th>
             <th>Setting</th>
             <th>Date</th>
@@ -15,22 +14,7 @@
     <tbody>
         {% for obs in observations %}
         <tr>
-            <td>
-                {% if obs.tellcorr %}
-                <span class="status green" title="Telluric-corrected"></span>
-                {% elif obs.extracted %}
-                <span class="status yellow" title="Extracted"></span>
-                {% else %}
-                <span class="status red" title="Not reduced"></span>
-                {% endif %}
-            </td>
-            <td>
-                {% if obs.extracted %}
-                <a href="{{ base }}/obs/{{ obs.dirname }}">{{ obs.object }}</a>
-                {% else %}
-                {{ obs.object }}
-                {% endif %}
-            </td>
+            <td><a href="{{ base }}/obs/{{ obs.dirname }}">{{ obs.object }}</a></td>
             <td class="mono">{{ obs.ins_wlen_id }}</td>
             <td class="mono">{{ obs.date_obs[:10] }}</td>
             <td class="mono">{{ obs.prog_id }}</td>
