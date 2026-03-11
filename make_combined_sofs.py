@@ -42,6 +42,14 @@ for tpl_start, group in df.groupby('tpl_start'):
     flat = f'../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits'
 
     frames = group.sort_values('date_obs').reset_index(drop=True)
+    na = (frames['nodpos'] == 'A').sum()
+    nb = (frames['nodpos'] == 'B').sum()
+    if na != nb:
+        n_keep = min(na, nb)
+        frames = pd.concat([
+            frames[frames['nodpos'] == 'A'].iloc[:n_keep],
+            frames[frames['nodpos'] == 'B'].iloc[:n_keep],
+        ]).sort_values('date_obs').reset_index(drop=True)
 
     tpl_short = tpl_start.replace('T', '_').replace(':', '')[:16]
     dirname = f'{sanitize(obj)}_{setting}_{tpl_short}'

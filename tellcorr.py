@@ -121,6 +121,10 @@ def process_one(input_fits, oset=None):
     """Process a single extractedA or B file. Returns (outpath, hdul_tellcorr)."""
     inpath = Path(input_fits).resolve()
     hdul = fits.open(inpath)
+    if 'CHIP1.INT1' not in hdul or not hasattr(hdul['CHIP1.INT1'], 'columns'):
+        print(f"  Skipping {inpath.name}: empty CHIP1.INT1 (bad esorex output?)")
+        hdul.close()
+        return None
     header = hdul[0].header
     setting = detect_setting(header)
     n_opc = ORDERS_PER_CHIP.get(setting)
@@ -130,7 +134,7 @@ def process_one(input_fits, oset=None):
     # max DRS order number from FITS columns (what vipere uses internally)
     max_order = max(
         int(c.split('_')[0])
-        for c in hdul[1].columns.names if c.endswith('_SPEC')
+        for c in hdul['CHIP1.INT1'].columns.names if c.endswith('_SPEC')
     )
     print(f"Setting: {setting}, {n_opc} orders/chip, max order {max_order}")
 
@@ -179,9 +183,8 @@ def process_one(input_fits, oset=None):
 
         out_hdul = fits.HDUList([hdul[0].copy()])
 
-        for ext_idx in [1, 2, 3]:
-            chip = ext_idx
-            table = hdul[ext_idx]
+        for chip in [1, 2, 3]:
+            table = hdul[f'CHIP{chip}.INT1']
             npix = table.data.shape[0]
 
             orders_in_chip = sorted(set(
@@ -300,7 +303,7 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
     # collect all order numbers
     orders = sorted(set(
         int(c.split('_')[0])
-        for c in hdul_orig_a[1].columns.names if c.endswith('_SPEC')
+        for c in hdul_orig_a['CHIP1.INT1'].columns.names if c.endswith('_SPEC')
     ))
 
     for odrs in orders:
@@ -314,16 +317,17 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
         tell_col = f"{odrs:02d}_01_TELLUR"
         cont_col = f"{odrs:02d}_01_CONT"
 
-        for ext_idx in [1, 2, 3]:
-            wl_a = hdul_orig_a[ext_idx].data[wl_col]
-            spec_a = hdul_orig_a[ext_idx].data[spec_col]
-            wl_b = hdul_orig_b[ext_idx].data[wl_col]
-            spec_b = hdul_orig_b[ext_idx].data[spec_col]
+        for chip in [1, 2, 3]:
+            extname = f'CHIP{chip}.INT1'
+            wl_a = hdul_orig_a[extname].data[wl_col]
+            spec_a = hdul_orig_a[extname].data[spec_col]
+            wl_b = hdul_orig_b[extname].data[wl_col]
+            spec_b = hdul_orig_b[extname].data[spec_col]
 
-            tell_a = hdul_tc_a[ext_idx].data[tell_col]
-            tell_b = hdul_tc_b[ext_idx].data[tell_col]
-            cont_a = hdul_tc_a[ext_idx].data[cont_col]
-            cont_b = hdul_tc_b[ext_idx].data[cont_col]
+            tell_a = hdul_tc_a[extname].data[tell_col]
+            tell_b = hdul_tc_b[extname].data[tell_col]
+            cont_a = hdul_tc_a[extname].data[cont_col]
+            cont_b = hdul_tc_b[extname].data[cont_col]
 
             # model = continuum * telluric transmission
             model_a = cont_a * tell_a
@@ -384,9 +388,13 @@ def process_dir(dir_path, oset=None):
 
     print(f"\n--- Processing A ---")
     tc_a_path = process_one(ext_a, oset=oset)
+    if tc_a_path is None:
+        return
 
     print(f"\n--- Processing B ---")
     tc_b_path = process_one(ext_b, oset=oset)
+    if tc_b_path is None:
+        return
 
     print(f"\n--- Making plots ---")
     hdul_tc_a = fits.open(tc_a_path)

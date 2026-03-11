@@ -168,7 +168,7 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
 
     max_order = max(
         int(c.split('_')[0])
-        for c in hdul[1].columns.names if c.endswith('_SPEC')
+        for c in hdul['CHIP1.INT1'].columns.names if c.endswith('_SPEC')
     )
 
     chip_solutions = {1: [], 2: [], 3: []}
@@ -199,7 +199,7 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
         solutions = chip_solutions[chip]
         orders_in_chip = sorted(set(
             int(c.split('_')[0])
-            for c in hdul[chip].columns.names if c.endswith('_SPEC')
+            for c in hdul[f'CHIP{chip}.INT1'].columns.names if c.endswith('_SPEC')
         ))
 
         fitted_orders = set(s[0] for s in solutions)
@@ -217,7 +217,7 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
             wl_col = f"{odrs:02d}_01_WL"
             wl_vipere = np.polynomial.polynomial.polyval(
                 pixels - xcen, wcoeffs) / 10.0
-            hdul[chip].data[wl_col] = wl_vipere
+            hdul[f'CHIP{chip}.INT1'].data[wl_col] = wl_vipere
 
         # 2D interpolation for unfitted orders
         if unfitted_orders and len(solutions) >= 2:
@@ -229,7 +229,7 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
             for odrs in unfitted_orders:
                 wl_col = f"{odrs:02d}_01_WL"
                 wl_interp = eval_2d(pixels, odrs)
-                hdul[chip].data[wl_col] = wl_interp
+                hdul[f'CHIP{chip}.INT1'].data[wl_col] = wl_interp
                 print(f"    order {odrs:02d}: interpolated "
                       f"(center wl {wl_interp[1024]:.2f} nm)")
         elif unfitted_orders:
