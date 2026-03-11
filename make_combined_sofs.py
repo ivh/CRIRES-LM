@@ -46,6 +46,8 @@ for tpl_start, group in df.groupby('tpl_start'):
     nb = (frames['nodpos'] == 'B').sum()
     if na != nb:
         n_keep = min(na, nb)
+        if n_keep == 0:
+            continue
         frames = pd.concat([
             frames[frames['nodpos'] == 'A'].iloc[:n_keep],
             frames[frames['nodpos'] == 'B'].iloc[:n_keep],

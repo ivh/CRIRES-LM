@@ -122,8 +122,9 @@ def process_one(input_fits, oset=None):
     inpath = Path(input_fits).resolve()
     hdul = fits.open(inpath)
     if 'CHIP1.INT1' not in hdul or not hasattr(hdul['CHIP1.INT1'], 'columns'):
-        print(f"  Skipping {inpath.name}: empty CHIP1.INT1 (bad esorex output?)")
+        print(f"  Skipping {inpath.name}: empty CHIP1.INT1 (bad esorex output?), deleting")
         hdul.close()
+        inpath.unlink()
         return None
     header = hdul[0].header
     setting = detect_setting(header)
@@ -300,11 +301,13 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
     """Make one plot per spectral order, each showing 3 chips side by side."""
     dirname = Path(dir_path).name
 
-    # collect all order numbers
-    orders = sorted(set(
-        int(c.split('_')[0])
-        for c in hdul_orig_a['CHIP1.INT1'].columns.names if c.endswith('_SPEC')
-    ))
+    # collect all order numbers across all chips
+    orders = set()
+    for chip in [1, 2, 3]:
+        for c in hdul_orig_a[f'CHIP{chip}.INT1'].columns.names:
+            if c.endswith('_SPEC'):
+                orders.add(int(c.split('_')[0]))
+    orders = sorted(orders)
 
     for odrs in orders:
         fig, (ax1, ax2) = plt.subplots(
@@ -319,6 +322,8 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
 
         for chip in [1, 2, 3]:
             extname = f'CHIP{chip}.INT1'
+            if spec_col not in hdul_orig_a[extname].columns.names:
+                continue
             wl_a = hdul_orig_a[extname].data[wl_col]
             spec_a = hdul_orig_a[extname].data[spec_col]
             wl_b = hdul_orig_b[extname].data[wl_col]
