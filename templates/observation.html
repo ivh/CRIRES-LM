@@ -16,7 +16,7 @@
 <dl class="meta-grid">
     <dt>Date</dt><dd class="mono">{{ obs.date_obs }}</dd>
     <dt>Setting</dt><dd class="mono">{{ obs.ins_wlen_id }} ({{ obs.ins_wlen_cwlen }} nm)</dd>
-    <dt>Programme</dt><dd class="mono">{{ obs.prog_id }}</dd>
+    <dt>Programme</dt><dd class="mono"><a href="https://archive.eso.org/wdb/wdb/eso/sched_rep_arc/query?progid={{ obs.prog_id }}">{{ obs.prog_id }}</a></dd>
     <dt>Slit width</dt><dd>{{ obs.ins_slit1_wid }}"</dd>
     <dt>DIT x NDIT</dt><dd class="mono">{{ obs.det_dit }}s x {{ obs.det_ndit }}</dd>
     <dt>Frames</dt><dd>{{ obs.n_frames }} ({{ obs.n_A }}A + {{ obs.n_B }}B)</dd>

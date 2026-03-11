@@ -17,7 +17,7 @@
             <td><a href="{{ base }}/obs/{{ obs.dirname }}">{{ obs.object }}</a></td>
             <td class="mono">{{ obs.ins_wlen_id }}</td>
             <td class="mono">{{ obs.date_obs[:10] }}</td>
-            <td class="mono">{{ obs.prog_id }}</td>
+            <td class="mono"><a href="https://archive.eso.org/wdb/wdb/eso/sched_rep_arc/query?progid={{ obs.prog_id }}">{{ obs.prog_id }}</a></td>
             <td>{{ obs.n_frames }} ({{ obs.n_A }}A+{{ obs.n_B }}B)</td>
             <td class="mono">{{ obs.det_dit }}s x{{ obs.det_ndit }}</td>
             <td>{{ obs.ins_slit1_wid }}"</td>
