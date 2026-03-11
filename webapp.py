@@ -49,8 +49,7 @@ def get_db():
 def init_db():
     conn = sqlite3.connect(BASE / "LMscience.sqlite")
     conn.executescript("""
-        DROP VIEW IF EXISTS observations;
-        CREATE VIEW observations AS
+        CREATE VIEW IF NOT EXISTS observations AS
         SELECT
             tpl_start,
             object,
@@ -518,5 +517,10 @@ def serve_file(dirname: str, filename: str):
 
 
 if __name__ == "__main__":
+    import argparse
     import uvicorn
-    uvicorn.run("webapp:app", host="0.0.0.0", port=8000, reload=True)
+    p = argparse.ArgumentParser()
+    p.add_argument("--port", type=int, default=8000)
+    p.add_argument("--reload", action="store_true")
+    args = p.parse_args()
+    uvicorn.run("webapp:app", host="0.0.0.0", port=args.port, reload=args.reload)

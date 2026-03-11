@@ -1,0 +1,16 @@
+[Unit]
+Description=CRIRES+ L/M-band data browser
+After=network.target
+
+[Service]
+Type=simple
+User=tom
+Group=tom
+WorkingDirectory=/home/criresftp/data/LM_2021-25
+ExecStart=/home/tom/.local/bin/uv run webapp.py --port 8055
+Restart=on-failure
+RestartSec=5
+Environment=MPLBACKEND=Agg
+
+[Install]
+WantedBy=multi-user.target
