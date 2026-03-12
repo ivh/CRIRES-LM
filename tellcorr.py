@@ -100,7 +100,7 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
         '-oset', oset,
         '-o', 'tellfit',
         '-plot', '0',
-        '-vcut', '0',
+        '-vcut', '10',
     ]
     print(f"Running: {' '.join(cmd)}")
     env = os.environ | {'MPLBACKEND': 'Agg'}
@@ -369,6 +369,21 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
         ax2.set_ylabel('residual')
         ax2.set_xlabel('wavelength [nm]')
         ax1.set_title(f'{dirname}  order {odrs:02d}', fontsize=10)
+
+        # robust ylim: trim edge 10 pixels per chip, use 1-99 percentile
+        for ax in (ax1, ax2):
+            ydata = []
+            for line in ax.get_lines():
+                y = line.get_ydata()
+                if len(y) > 20:
+                    ydata.append(y[10:-10])
+            if ydata:
+                all_y = np.concatenate(ydata)
+                all_y = all_y[np.isfinite(all_y)]
+                if len(all_y) > 0:
+                    lo, hi = np.percentile(all_y, [1, 99])
+                    margin = 0.05 * (hi - lo) if hi > lo else 1
+                    ax.set_ylim(lo - margin, hi + margin)
 
         for ax in (ax1, ax2):
             ax.tick_params(labelsize=8)
