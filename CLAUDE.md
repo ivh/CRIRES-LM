@@ -205,7 +205,8 @@ All hot B/O-type stars with clean continua in L/M band:
 - Pairs A+B frames from LMscience.sqlite using greedy matching within each template sequence
 - 5239 AB pairs across 16 settings, 414 combined template sequences
 - Directory structure: `reduced/{object}_{setting}_{tpl_start}_{pair}/nodd.sof`
-- SOF references: `../../raw/{dp_id}.fits`, `../../{setting}_tw.fits`, `../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits`
+- SOF references: `../../raw/{dp_id}.fits`, `./{setting}_tw.fits`, `../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits`
+- The `_tw.fits` is a local adjusted copy (see trace adjustment below); SOFs use `./` not `../../`
 - 229 frames unpaired (odd counts or all-same nod position)
 - Non-standard templates (raster, spectroastrometry, 12 sequences) excluded
 - Some sequences labeled as nodding have only one nod position (Jupiter, Venus, Moon scans) — these fail `cr2res_obs_nodding` (nod throw=0 or unequal A/B). Removed from database or skipped by `make_combined_sofs.py`
@@ -220,6 +221,17 @@ All hot B/O-type stars with clean continua in L/M band:
 - Custom settings: `extract_swath_width=2048`, `extract_height=45`, `extract_oversample=10`
 - Usage: `esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof`
 - CLI flags override config file values
+
+### Trace adjustment for instrument flexure (`adjust_traces.py`)
+- CRIRES+ has mechanical flexure that shifts spectral orders on the detector between calibration and science observations
+- `adjust_traces.py` measures the Y-shift per observation by cross-correlating the spatial edge profile of a raw frame against the order boundaries (Upper/Lower) in the reference `_tw.fits`
+- Method: takes `abs(gradient)` of the median spatial profile (columns 500-1500), builds synthetic Gaussian spikes at trace boundaries, cross-correlates with search range +/- 100 pixels
+- Shift is typically 5-10 pixels, occasionally up to ~50 pixels; consistent across all 3 chips
+- Uses median shift across the 3 chips for robustness
+- Writes adjusted `_tw.fits` into each reduction dir (adds shift to c0 of All, Upper, Lower polynomials)
+- Original `_tw.fits` lives at `../../{setting}_tw.fits`; adjusted copy at `./{setting}_tw.fits`
+- Run: `ls reduced/*/nodd.sof | sed 's|/nodd.sof||' | parallel -j8 --bar 'uv run adjust_traces.py {}'`
+- Must run after `make_reduction_sofs.py` / `make_combined_sofs.py` and before esorex
 
 ### Batch reduction + telluric + wavelength correction
 ```
