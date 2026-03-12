@@ -16,9 +16,9 @@ Reduction of all public CRIRES+ L-band (2.8-4.2 um) and M-band (4.2-5.5 um) scie
 - `deep_flats.sqlite` — metadata for deep L/M flats NDIT>10 same time range (914 rows)
 - `fetch_LM.py` — downloads science frames from LMscience.sqlite, fills nodpos from headers
 - `fetch_deep_flats.py` — downloads deep flat frames from deep_flats.sqlite
-- `reduce_flats.sh` — runs `esorex cr2res_cal_flat` on all SOFs in `sof/` via GNU parallel
-- `sof/` — SOF files for flat reduction, named `{setting}_{date}_flats.sof`
-- `flats/` — fetched raw flats in `raw/`, reduced output in `{setting}/` subdirs
+- `flats/` — flat field data: `raw/` has fetched raw flats, `{setting}_{date}/` subdirs each contain `flats.sof` and esorex output
+- `flats/reduce_flats.sh` — runs `esorex cr2res_cal_flat` on all flat subdirs via GNU parallel
+- `cr2res_cal_flat.rc` — recipe parameter file for flat reduction (extract_oversample=8, extract_swath_width=400, extract_smooth_slit=4, extract_smooth_spec=3)
 - `raw/` — all fetched science frames (on server)
 - `{setting}_tw.fits` — tracing/wavelength tables per setting, updated with vipere wavelengths and slit tilt
 - `make_reduction_sofs.py` — generates `reduced/` directory tree with SOF files for all 5239 AB pairs
@@ -27,12 +27,12 @@ Reduction of all public CRIRES+ L-band (2.8-4.2 um) and M-band (4.2-5.5 um) scie
 - `reduced/{object}_{setting}_{tpl_start}/` — combined dir (all frames from one template), no `_N` suffix
 
 ## esorex cr2res usage
-- `esorex cr2res_cal_flat sof` — reduce flats (run from dir containing the data)
+- `esorex --recipe-config=../../cr2res_cal_flat.rc cr2res_cal_flat flats.sof` — reduce flats (run from inside flat subdir)
 - `esorex cr2res_obs_nodding sof` — reduce nodding observations
 - SOF paths are relative to the directory esorex is called from, NOT relative to the SOF file
 - Flat output products: `cr2res_cal_flat_Open_master_flat.fits`, `_bpm.fits`, `_blaze.fits`, `_slit_func.fits`, `_slit_model.fits`, `_tw.fits`
 - Multiple reductions in same output dir overwrite each other — use separate dirs or run from inside subdirs
-- SOF format: `filename TAG` per line. Tags: `FLAT`, `OBS_NODDING_OTHER`, `UTIL_WAVE_TW`, `CAL_FLAT`, `UTIL_TRACE`
+- SOF format: `filename TAG` per line. Tags: `FLAT`, `OBS_NODDING_OTHER`, `UTIL_WAVE_TW`, `CAL_FLAT`, `CAL_FLAT_EXTRACT_1D` (blaze), `UTIL_TRACE`
 - Batch run: `ls reduced/*/nodd.sof | parallel --bar -j 8 'cd {//} && esorex cr2res_obs_nodding nodd.sof 2>&1 > esorex.log'`
 
 ## CRIRES calibration OBs
@@ -203,22 +203,23 @@ All hot B/O-type stars with clean continua in L/M band:
 
 ### Setup (`make_reduction_sofs.py`)
 - Pairs A+B frames from LMscience.sqlite using greedy matching within each template sequence
-- 5239 AB pairs across 16 settings, 414 combined template sequences
+- 5237 AB pairs across 16 settings, 412 combined template sequences
 - Directory structure: `reduced/{object}_{setting}_{tpl_start}_{pair}/nodd.sof`
-- SOF references: `../../raw/{dp_id}.fits`, `./{setting}_tw.fits`, `../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits`
+- SOF references: `../../raw/{dp_id}.fits`, `./{setting}_tw.fits`, nearest-in-time flat + blaze from `../../flats/{setting}_{date}/`
+- Nearest flat matching: bisect on flat dates per setting from `flats/` directory structure
 - The `_tw.fits` is a local adjusted copy (see trace adjustment below); SOFs use `./` not `../../`
 - 229 frames unpaired (odd counts or all-same nod position)
 - Non-standard templates (raster, spectroastrometry, 12 sequences) excluded
 - Some sequences labeled as nodding have only one nod position (Jupiter, Venus, Moon scans) — these fail `cr2res_obs_nodding` (nod throw=0 or unequal A/B). Removed from database or skipped by `make_combined_sofs.py`
 
 ### Pairs per setting
-- L3244: 9, L3262: 473, L3302: 404, L3340: 358, L3377: 353, L3412: 30, L3426: 92
-- M4187: 35, M4211: 520, M4266: 57, M4318: 611, M4368: 2244, M4416: 9, M4461: 35, M4504: 5, M4519: 4
+- L3244: 16, L3262: 498, L3302: 446, L3340: 399, L3377: 395, L3412: 36, L3426: 101
+- M4187: 40, M4211: 578, M4266: 68, M4318: 638, M4368: 2398, M4416: 12, M4461: 39, M4504: 8, M4519: 4
 
-### esorex recipe config
-- `cr2res_obs_nodding.rc` — recipe parameter file for nodding reduction
-- Generated via `esorex --create-config=cr2res_obs_nodding.rc cr2res_obs_nodding`
-- Custom settings: `extract_swath_width=2048`, `extract_height=45`, `extract_oversample=10`
+### esorex recipe configs
+- `cr2res_obs_nodding.rc` — recipe parameter file for nodding reduction (extract_swath_width=2048, extract_height=45, extract_oversample=10)
+- `cr2res_cal_flat.rc` — recipe parameter file for flat reduction (extract_oversample=8, extract_swath_width=400, extract_smooth_slit=4, extract_smooth_spec=3)
+- Generated via `esorex --create-config=<file>.rc <recipe>`
 - Usage: `esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof`
 - CLI flags override config file values
 
