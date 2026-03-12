@@ -38,7 +38,7 @@ for tpl_start, group in df.groupby('tpl_start'):
     setting = group.iloc[0]['ins_wlen_id']
     obj = group.iloc[0]['object']
 
-    tw = f'../../{setting}_tw.fits'
+    tw = f'./{setting}_tw.fits'
     flat = f'../../flats/{setting}/cr2res_cal_flat_Open_master_flat.fits'
 
     frames = group.sort_values('date_obs').reset_index(drop=True)
