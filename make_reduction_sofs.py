@@ -105,7 +105,7 @@ for tpl_start, group in df.groupby('tpl_start'):
             f.write(f'../../raw/{f1["dp_id"]}.fits OBS_NODDING_OTHER\n')
             f.write(f'../../raw/{f2["dp_id"]}.fits OBS_NODDING_OTHER\n')
             f.write(f'{tw} UTIL_WAVE_TW\n')
-            f.write(f'{flat} CAL_FLAT\n')
+            f.write(f'{flat} CAL_FLAT_MASTER\n')
             f.write(f'{blaze} CAL_FLAT_EXTRACT_1D\n')
 
         n_pairs += 1

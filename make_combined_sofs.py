@@ -94,7 +94,7 @@ for tpl_start, group in df.groupby('tpl_start'):
         for _, row in frames.iterrows():
             f.write(f'../../raw/{row["dp_id"]}.fits OBS_NODDING_OTHER\n')
         f.write(f'{tw} UTIL_WAVE_TW\n')
-        f.write(f'{flat} CAL_FLAT\n')
+        f.write(f'{flat} CAL_FLAT_MASTER\n')
         f.write(f'{blaze} CAL_FLAT_EXTRACT_1D\n')
 
     n_dirs += 1
