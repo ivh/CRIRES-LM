@@ -11,4 +11,5 @@ for dir in "$@"; do
     (cd "$dir" && esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof 2>&1 > esorex.log)
     uv run tellcorr.py "$dir"
     uv run wavecorr.py "$dir"
+    uv run plot_ABtraces.py "$dir"
 done
