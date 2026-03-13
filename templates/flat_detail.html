@@ -31,13 +31,15 @@
 <h2>SOF contents</h2>
 <table class="frames-table">
     <thead>
-        <tr><th>File</th><th>Tag</th></tr>
+        <tr><th>File</th><th>Tag</th><th>DIT</th><th>NDIT</th></tr>
     </thead>
     <tbody>
         {% for f in raw_frames %}
         <tr>
             <td class="mono">{{ f.filename }}</td>
             <td class="mono">{{ f.tag }}</td>
+            <td class="mono">{{ f.det_dit ~ 's' if f.det_dit is defined and f.det_dit else '' }}</td>
+            <td class="mono">{{ f.det_ndit if f.det_ndit is defined and f.det_ndit else '' }}</td>
         </tr>
         {% endfor %}
     </tbody>

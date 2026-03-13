@@ -60,6 +60,11 @@
 </div>
 {% endif %}
 
+{% if flat_dirname %}
+<h2>Calibration</h2>
+<p>Flat field: <a href="{{ base }}/flat/{{ flat_dirname }}">{{ flat_dirname }}</a></p>
+{% endif %}
+
 <h2>Raw frames</h2>
 <table class="frames-table">
     <thead>

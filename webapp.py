@@ -429,15 +429,33 @@ def flat_detail(request: Request, dirname: str):
     setting = parts[0] if len(parts) == 2 else dirname
     date = parts[1] if len(parts) == 2 else ""
 
-    # parse SOF for raw frame list
+    # parse SOF for raw frame list, look up DIT/NDIT from deep_flats.sqlite
     sof_file = flatdir / "flats.sof"
     raw_frames = []
     if sof_file.exists():
+        dp_ids = []
         for line in sof_file.read_text().splitlines():
             if not line.strip():
                 continue
             filename, tag = line.strip().rsplit(None, 1)
-            raw_frames.append({"filename": Path(filename).name, "tag": tag})
+            name = Path(filename).name
+            dp_id = name.removesuffix(".fits")
+            raw_frames.append({"filename": name, "tag": tag, "dp_id": dp_id})
+            if tag == "FLAT":
+                dp_ids.append(dp_id)
+        if dp_ids:
+            conn_flats = sqlite3.connect(BASE / "deep_flats.sqlite")
+            conn_flats.row_factory = sqlite3.Row
+            placeholders = ",".join("?" * len(dp_ids))
+            rows = conn_flats.execute(
+                f"SELECT dp_id, det_dit, det_ndit FROM flats WHERE dp_id IN ({placeholders})",
+                dp_ids,
+            ).fetchall()
+            conn_flats.close()
+            dit_ndit = {r["dp_id"]: (r["det_dit"], r["det_ndit"]) for r in rows}
+            for f in raw_frames:
+                if f["dp_id"] in dit_ndit:
+                    f["det_dit"], f["det_ndit"] = dit_ndit[f["dp_id"]]
 
     # read basic header info from master flat if present
     header_info = {}
@@ -549,6 +567,15 @@ def observation(request: Request, dirname: str):
         if p.name.endswith("_tellcorr.fits")
     ) if dp.exists() else []
 
+    # extract flat directory from SOF
+    flat_dirname = None
+    sof = dp / "nodd.sof" if dp.exists() else None
+    if sof and sof.exists():
+        for line in sof.read_text().splitlines():
+            if "CAL_FLAT_MASTER" in line:
+                flat_dirname = Path(line.split()[0]).parent.name
+                break
+
     return templates.TemplateResponse("observation.html", {
         "request": request,
         "obs": obs,
@@ -556,6 +583,7 @@ def observation(request: Request, dirname: str):
         "downloads": downloads,
         "prev_dir": prev_dir,
         "next_dir": next_dir,
+        "flat_dirname": flat_dirname,
     })
 
 
