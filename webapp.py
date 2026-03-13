@@ -21,6 +21,7 @@ from fastapi.templating import Jinja2Templates
 
 BASE = Path(__file__).parent
 REDUCED = BASE / "reduced"
+FLATS = BASE / "flats"
 
 # precomputed lookup: dirname -> tpl_start
 _dir_to_tpl: dict[str, str] = {}
@@ -399,6 +400,90 @@ def about(request: Request):
         "request": request,
         "content": html,
     })
+
+
+@app.get("/flats", response_class=HTMLResponse)
+def flat_index(request: Request, setting: str = Query(None)):
+    flat_dirs = sorted(
+        d.name for d in FLATS.iterdir()
+        if d.is_dir() and d.name not in ("raw", "sof")
+    )
+    if setting:
+        flat_dirs = [d for d in flat_dirs if d.startswith(setting)]
+    settings = sorted({d.rsplit("_", 1)[0] for d in flat_dirs})
+    return templates.TemplateResponse("flats_index.html", {
+        "request": request,
+        "flat_dirs": flat_dirs,
+        "settings": settings,
+        "sel_setting": setting,
+    })
+
+
+@app.get("/flat/{dirname}", response_class=HTMLResponse)
+def flat_detail(request: Request, dirname: str):
+    flatdir = FLATS / dirname
+    if not flatdir.is_dir():
+        return HTMLResponse("Flat not found", status_code=404)
+
+    parts = dirname.rsplit("_", 1)
+    setting = parts[0] if len(parts) == 2 else dirname
+    date = parts[1] if len(parts) == 2 else ""
+
+    # parse SOF for raw frame list
+    sof_file = flatdir / "flats.sof"
+    raw_frames = []
+    if sof_file.exists():
+        for line in sof_file.read_text().splitlines():
+            if not line.strip():
+                continue
+            filename, tag = line.strip().rsplit(None, 1)
+            raw_frames.append({"filename": Path(filename).name, "tag": tag})
+
+    # read basic header info from master flat if present
+    header_info = {}
+    master = flatdir / "cr2res_cal_flat_Open_master_flat.fits"
+    if master.exists():
+        with fits.open(master) as hdul:
+            h = hdul[0].header
+            for key, label in [
+                ("ESO INS WLEN ID", "Setting"),
+                ("ESO DET DIT", "DIT"),
+                ("ESO DET NDIT", "NDIT"),
+                ("ESO INS SLIT1 WID", "Slit width"),
+                ("ESO INS FILT1 NAME", "Filter"),
+            ]:
+                if key in h:
+                    header_info[label] = h[key]
+
+    images = sorted(p.name for p in flatdir.glob("*.png"))
+
+    products = sorted(
+        p.name for p in flatdir.iterdir()
+        if p.suffix == ".fits"
+    )
+
+    return templates.TemplateResponse("flat_detail.html", {
+        "request": request,
+        "dirname": dirname,
+        "setting": setting,
+        "date": date,
+        "header_info": header_info,
+        "raw_frames": raw_frames,
+        "images": images,
+        "products": products,
+    })
+
+
+@app.get("/flat-files/{dirname}/{filename}")
+def serve_flat_file(dirname: str, filename: str):
+    filepath = FLATS / dirname / filename
+    if not filepath.exists() or not filepath.is_file():
+        return HTMLResponse("Not found", status_code=404)
+    if filename.endswith(".png"):
+        return FileResponse(filepath, media_type="image/png")
+    if filename.endswith(".fits"):
+        return FileResponse(filepath, media_type="application/octet-stream", filename=filename)
+    return HTMLResponse("Unsupported file type", status_code=400)
 
 
 @app.get("/obs/{dirname}", response_class=HTMLResponse)

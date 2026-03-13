@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Flats - CRIRES+ Browser{% endblock %}
+{% block content %}
+<div style="display:flex; justify-content:space-between; align-items:baseline;">
+<h1>Flat fields ({{ flat_dirs|length }})</h1>
+<a class="about-link" href="{{ base }}/about">About</a>
+</div>
+
+<form class="filters" style="margin-bottom:1rem;">
+    <div>
+        <label for="setting">Setting</label>
+        <select name="setting" id="setting" onchange="window.location='{{ base }}/flats'+(this.value ? '?setting='+this.value : '')">
+            <option value="">All settings</option>
+            {% for s in settings %}
+            <option value="{{ s }}" {{ 'selected' if sel_setting == s }}>{{ s }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</form>
+
+<table>
+    <thead>
+        <tr>
+            <th>Setting</th>
+            <th>Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for d in flat_dirs %}
+        {% set parts = d.rsplit('_', 1) %}
+        <tr>
+            <td class="mono">{{ parts[0] }}</td>
+            <td class="mono"><a href="{{ base }}/flat/{{ d }}">{{ parts[1] }}</a></td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

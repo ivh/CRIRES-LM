@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Flat {{ setting }} {{ date }} - CRIRES+ Browser{% endblock %}
+{% block content %}
+<div class="nav-links">
+    <a class="back" href="{{ base }}/flats">&larr; All flats</a>
+    <a class="about-link" href="{{ base }}/about">About</a>
+</div>
+
+<h1>Flat: {{ setting }} &mdash; {{ date }}</h1>
+
+{% if header_info %}
+<dl class="meta-grid">
+    {% for label, value in header_info.items() %}
+    <dt>{{ label }}</dt><dd class="mono">{{ value }}</dd>
+    {% endfor %}
+</dl>
+{% endif %}
+
+{% if images %}
+<h2>Diagnostic plots</h2>
+<div class="images-grid">
+    {% for img in images %}
+    <a href="{{ base }}/flat-files/{{ dirname }}/{{ img }}" target="_blank">
+        <img src="{{ base }}/flat-files/{{ dirname }}/{{ img }}" alt="{{ img }}" loading="lazy">
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+
+{% if raw_frames %}
+<h2>SOF contents</h2>
+<table class="frames-table">
+    <thead>
+        <tr><th>File</th><th>Tag</th></tr>
+    </thead>
+    <tbody>
+        {% for f in raw_frames %}
+        <tr>
+            <td class="mono">{{ f.filename }}</td>
+            <td class="mono">{{ f.tag }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% if products %}
+<h2>Products</h2>
+<ul class="dl-list">
+    {% for f in products %}
+    <li><a href="{{ base }}/flat-files/{{ dirname }}/{{ f }}" download>{{ f }}</a></li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

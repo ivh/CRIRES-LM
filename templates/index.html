@@ -2,7 +2,10 @@
 {% block content %}
 <div style="display:flex; justify-content:space-between; align-items:baseline;">
 <h1>CRIRES+ L/M-band data browser</h1>
+<span style="display:flex; gap:1rem;">
+<a class="about-link" href="{{ base }}/flats">Flats</a>
 <a class="about-link" href="{{ base }}/about">About</a>
+</span>
 </div>
 
 <form class="filters" hx-get="{{ base }}/" hx-target="#results" hx-push-url="true" hx-trigger="change, search, keyup changed delay:300ms from:#q">
