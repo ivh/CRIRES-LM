@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pandas"]
 # ///
-"""Generate directory structure and SOF files for reducing all science AB pairs."""
+"""Generate SOF files for all science reductions: combined per-template and individual AB pairs."""
 
 import bisect
 import re
@@ -58,10 +58,23 @@ def sanitize(name):
     return re.sub(r'[^a-zA-Z0-9._+-]', '_', name)
 
 
+def write_sofs(directory, raw_lines, tw, flat, blaze):
+    """Write nodd.sof (raw + tw) and calib.sof (flat + blaze) into directory."""
+    directory.mkdir(exist_ok=True)
+    with open(directory / 'nodd.sof', 'w') as f:
+        for line in raw_lines:
+            f.write(line)
+        f.write(f'{tw} UTIL_WAVE_TW\n')
+    with open(directory / 'calib.sof', 'w') as f:
+        f.write(f'{flat} CAL_FLAT_MASTER\n')
+        f.write(f'{blaze} CAL_FLAT_EXTRACT_1D\n')
+
+
 outdir = BASE / 'reduced'
 outdir.mkdir(exist_ok=True)
 
 n_pairs = 0
+n_combined = 0
 n_skipped = 0
 
 for tpl_start, group in df.groupby('tpl_start'):
@@ -72,10 +85,31 @@ for tpl_start, group in df.groupby('tpl_start'):
     flat_dir = nearest_flat(setting, tpl_start)
     flat = f'../../flats/{flat_dir}/cr2res_cal_flat_Open_master_flat.fits'
     blaze = f'../../flats/{flat_dir}/cr2res_cal_flat_Open_blaze.fits'
+    tpl_short = tpl_start.replace('T', '_').replace(':', '')[:16]
 
     frames = group.sort_values('date_obs').reset_index(drop=True)
 
-    # greedy pairing: walk through frames, match each A with next B or vice versa
+    # --- combined: all frames per template ---
+    na = (frames['nodpos'] == 'A').sum()
+    nb = (frames['nodpos'] == 'B').sum()
+    comb_frames = frames
+    if na != nb:
+        n_keep = min(na, nb)
+        if n_keep == 0:
+            n_skipped += len(frames)
+            continue
+        comb_frames = pd.concat([
+            frames[frames['nodpos'] == 'A'].iloc[:n_keep],
+            frames[frames['nodpos'] == 'B'].iloc[:n_keep],
+        ]).sort_values('date_obs').reset_index(drop=True)
+
+    dirname = f'{sanitize(obj)}_{setting}_{tpl_short}'
+    raw_lines = [f'../../raw/{row["dp_id"]}.fits OBS_NODDING_OTHER\n'
+                 for _, row in comb_frames.iterrows()]
+    write_sofs(outdir / dirname, raw_lines, tw, flat, blaze)
+    n_combined += 1
+
+    # --- individual AB pairs ---
     paired = set()
     pairs = []
     for i in range(len(frames)):
@@ -94,39 +128,36 @@ for tpl_start, group in df.groupby('tpl_start'):
     for pair_num, (i, j) in enumerate(pairs, 1):
         f1 = frames.iloc[i]
         f2 = frames.iloc[j]
-
-        tpl_short = tpl_start.replace('T', '_').replace(':', '')[:16]
         dirname = f'{sanitize(obj)}_{setting}_{tpl_short}_{pair_num}'
-        pairdir = outdir / dirname
-        pairdir.mkdir(exist_ok=True)
-
-        sof = pairdir / 'nodd.sof'
-        with open(sof, 'w') as f:
-            f.write(f'../../raw/{f1["dp_id"]}.fits OBS_NODDING_OTHER\n')
-            f.write(f'../../raw/{f2["dp_id"]}.fits OBS_NODDING_OTHER\n')
-            f.write(f'{tw} UTIL_WAVE_TW\n')
-            f.write(f'{flat} CAL_FLAT_MASTER\n')
-            f.write(f'{blaze} CAL_FLAT_EXTRACT_1D\n')
-
+        raw_lines = [
+            f'../../raw/{f1["dp_id"]}.fits OBS_NODDING_OTHER\n',
+            f'../../raw/{f2["dp_id"]}.fits OBS_NODDING_OTHER\n',
+        ]
+        write_sofs(outdir / dirname, raw_lines, tw, flat, blaze)
         n_pairs += 1
 
-print(f'{n_pairs} AB pairs created')
-print(f'{n_skipped} frames skipped (odd or same nod position)')
+print(f'{n_combined} combined template dirs')
+print(f'{n_pairs} AB pair dirs')
+print(f'{n_skipped} frames unpaired')
 
 # summary by setting
-pair_dirs = sorted(outdir.iterdir())
-by_setting = {}
-for d in pair_dirs:
-    if not d.is_dir():
+by_setting_comb = {}
+by_setting_pair = {}
+for tpl_start, group in df.groupby('tpl_start'):
+    setting = group.iloc[0]['ins_wlen_id']
+    by_setting_comb.setdefault(setting, 0)
+    by_setting_comb[setting] += 1
+for d in sorted(outdir.iterdir()):
+    if not d.is_dir() or not (d / 'nodd.sof').exists():
         continue
     parts = d.name.split('_')
-    # setting is the part matching L\d{4} or M\d{4}
     for p in parts:
         if re.match(r'^[LM]\d{4}$', p):
-            by_setting.setdefault(p, 0)
-            by_setting[p] += 1
+            if re.match(r'.*_\d+$', d.name):
+                by_setting_pair.setdefault(p, 0)
+                by_setting_pair[p] += 1
             break
 
 print('\nPairs per setting:')
-for s in sorted(by_setting):
-    print(f'  {s}: {by_setting[s]}')
+for s in sorted(by_setting_pair):
+    print(f'  {s}: {by_setting_pair[s]}')

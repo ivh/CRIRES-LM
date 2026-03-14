@@ -23,6 +23,7 @@ flats/raw/
 reduced/**
 !reduced/*/
 !reduced/*/nodd.sof
+!reduced/*/calib.sof
 
 # Python
 __pycache__/
