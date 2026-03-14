@@ -20,10 +20,7 @@ raw/
 flats/raw/
 
 # Reduced data products (huge, regenerable)
-reduced/**
-!reduced/*/
-!reduced/*/nodd.sof
-!reduced/*/calib.sof
+reduced/
 
 # Python
 __pycache__/
