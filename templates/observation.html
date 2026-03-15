@@ -5,7 +5,6 @@
     <a class="back" href="{{ base }}/{{ variant_qs }}">&larr; All observations</a>
     {% if prev_dir %}<a href="{{ base }}/obs/{{ prev_dir }}{{ variant_qs }}">&larr; Prev ({{ obs.ins_wlen_id }})</a>{% endif %}
     {% if next_dir %}<a href="{{ base }}/obs/{{ next_dir }}{{ variant_qs }}">Next ({{ obs.ins_wlen_id }}) &rarr;</a>{% endif %}
-    <a href="{{ base }}/obs/{{ obs.dirname }}{{ other_variant_qs }}">View {{ other_variant_label }}</a>
     <a class="about-link" href="{{ base }}/about">About</a>
 </div>
 
@@ -22,6 +21,8 @@
     <dt>DIT x NDIT</dt><dd class="mono">{{ obs.det_dit }}s x {{ obs.det_ndit }}</dd>
     <dt>Frames</dt><dd>{{ obs.n_frames }} ({{ obs.n_A }}A + {{ obs.n_B }}B)</dd>
     <dt>Total exposure</dt><dd>{{ obs.total_exposure }}s</dd>
+    <dt>Reduction</dt><dd>{{ "without flat" if variant else "with flat" }} (<a href="{{ base }}/obs/{{ obs.dirname }}{{ other_variant_qs }}">view {{ other_variant_label }}</a>)</dd>
+    {% if flat_dirname %}<dt>Flat field</dt><dd><a href="{{ base }}/flat/{{ flat_dirname }}">{{ flat_dirname }}</a></dd>{% endif %}
 </dl>
 
 <h2>Spectrum</h2>
@@ -59,11 +60,6 @@
     </a>
     {% endfor %}
 </div>
-{% endif %}
-
-{% if flat_dirname %}
-<h2>Calibration</h2>
-<p>Flat field: <a href="{{ base }}/flat/{{ flat_dirname }}">{{ flat_dirname }}</a></p>
 {% endif %}
 
 <h2>Raw frames</h2>
