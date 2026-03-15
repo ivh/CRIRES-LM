@@ -14,15 +14,15 @@
 {% endif %}
 
 <dl class="meta-grid">
-    <dt>Date</dt><dd class="mono">{{ obs.date_obs }}</dd>
-    <dt>Setting</dt><dd class="mono">{{ obs.ins_wlen_id }} ({{ obs.ins_wlen_cwlen }} nm)</dd>
-    <dt>Programme</dt><dd class="mono"><a href="https://archive.eso.org/wdb/wdb/eso/sched_rep_arc/query?progid={{ obs.prog_id }}">{{ obs.prog_id }}</a></dd>
-    <dt>Slit width</dt><dd>{{ obs.ins_slit1_wid }}"</dd>
-    <dt>DIT x NDIT</dt><dd class="mono">{{ obs.det_dit }}s x {{ obs.det_ndit }}</dd>
-    <dt>Frames</dt><dd>{{ obs.n_frames }} ({{ obs.n_A }}A + {{ obs.n_B }}B)</dd>
-    <dt>Total exposure</dt><dd>{{ obs.total_exposure }}s</dd>
-    <dt>Reduction</dt><dd>{{ "without flat" if variant else "with flat" }} (<a href="{{ base }}/obs/{{ obs.dirname }}{{ other_variant_qs }}">view {{ other_variant_label }}</a>)</dd>
-    {% if flat_dirname %}<dt>Flat field</dt><dd><a href="{{ base }}/flat/{{ flat_dirname }}">{{ flat_dirname }}</a></dd>{% endif %}
+    <div><dt>Date</dt><dd class="mono">{{ obs.date_obs }}</dd></div>
+    <div><dt>Setting</dt><dd class="mono">{{ obs.ins_wlen_id }} ({{ obs.ins_wlen_cwlen }} nm)</dd></div>
+    <div><dt>Programme</dt><dd class="mono"><a href="https://archive.eso.org/wdb/wdb/eso/sched_rep_arc/query?progid={{ obs.prog_id }}">{{ obs.prog_id }}</a></dd></div>
+    <div><dt>Slit width</dt><dd>{{ obs.ins_slit1_wid }}"</dd></div>
+    <div><dt>DIT x NDIT</dt><dd class="mono">{{ obs.det_dit }}s x {{ obs.det_ndit }}</dd></div>
+    <div><dt>Frames</dt><dd>{{ obs.n_frames }} ({{ obs.n_A }}A + {{ obs.n_B }}B)</dd></div>
+    <div><dt>Total exposure</dt><dd>{{ obs.total_exposure }}s</dd></div>
+    <div><dt>Reduction</dt><dd>{{ "without flat" if variant else "with flat" }} (<a href="{{ base }}/obs/{{ obs.dirname }}{{ other_variant_qs }}">view {{ other_variant_label }}</a>)</dd></div>
+    {% if flat_dirname %}<div><dt>Flat field</dt><dd><a href="{{ base }}/flat/{{ flat_dirname }}">{{ flat_dirname }}</a></dd></div>{% endif %}
 </dl>
 
 <h2>Spectrum</h2>
