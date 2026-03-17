@@ -94,7 +94,7 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
         raise ValueError(f"Unknown setting {setting}")
 
     if oset is None:
-        oset = OSET_OVERRIDE.get(setting, f"1:{n_orders * 3}")
+        oset = OSET_OVERRIDE.get(setting, f"1:{n_orders * 3 + 1}")
 
     cmd = [
         'uvx', '--from', str(Path.home() / 'vipere.git'), 'vipere',
