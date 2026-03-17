@@ -106,7 +106,7 @@ def fit_2d_wavelength(chip_data, deg_x=2, deg_ord=2):
 
 
 def plot_2d_wavelength(chip_data, fit_info, eval_2d, chip,
-                       orders_in_chip, unfitted_orders, outpath):
+                       orders_in_chip, unfitted_orders, outpath, ab=''):
     """3D plot of wavelength surface and fitted data points."""
     x_mean, x_std, o_mean, o_std, powers, coeffs = fit_info
 
@@ -152,7 +152,7 @@ def plot_2d_wavelength(chip_data, fit_info, eval_2d, chip,
     ax.set_xlabel('pixel')
     ax.set_ylabel('order')
     ax.set_zlabel('wavelength [nm]')
-    ax.set_title(f'chip {chip} wavelength fit')
+    ax.set_title(f'chip {chip} wavelength fit ({ab})' if ab else f'chip {chip} wavelength fit')
 
     fig.savefig(outpath, dpi=150, bbox_inches='tight')
     plt.close(fig)
@@ -227,7 +227,8 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
             plot_2d_wavelength(
                 solutions, fit_info, eval_2d, chip,
                 orders_in_chip, unfitted_orders,
-                Path(tellcorr_fits).parent / f'wavecorr_chip{chip}_{ab}.png')
+                Path(tellcorr_fits).parent / f'wavecorr_chip{chip}_{ab}.png',
+                ab=ab)
             for odrs in unfitted_orders:
                 wl_col = f"{odrs:02d}_01_WL"
                 if wl_col not in hdul[f'CHIP{chip}.INT1'].columns.names:
