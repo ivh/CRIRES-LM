@@ -96,20 +96,19 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
     if oset is None:
         oset = OSET_OVERRIDE.get(setting, f"1:{n_orders * 3 + 1}")
 
-    cmd = [
+    env = os.environ | {'MPLBACKEND': 'Agg'}
+    base_cmd = [
         'uv', 'run', '--with-editable', str(Path.home() / 'vipere.git'), 'vipere',
         str(extracted_fits),
-        '-oset', oset,
         '-plot', '0',
         '-vcut', '10',
-        '-deg_norm', '4',
         '-deg_wave', '2',
         '-telluric', 'add',
         '-kapsig', '0',
-        '-o', 'tellfit',
     ]
+
+    cmd = base_cmd + ['-oset', oset, '-deg_norm', '4', '-o', 'tellfit']
     print(f"Running: {' '.join(cmd)}")
-    env = os.environ | {'MPLBACKEND': 'Agg'}
     result = subprocess.run(cmd, cwd=workdir, capture_output=True, text=True, env=env)
     if result.returncode != 0:
         print("vipere stdout:", result.stdout[-2000:] if result.stdout else "")
@@ -120,7 +119,55 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
     resdir = os.path.join(workdir, 'res')
     if not os.path.exists(pardat):
         raise RuntimeError(f"vipere did not produce {pardat}")
+
+    # retry failed orders with lower deg_norm
+    missing = _find_missing_orders(pardat, oset)
+    for vo in missing:
+        retry_oset = f"{vo}:{vo + 1}"
+        cmd2 = base_cmd + ['-oset', retry_oset, '-deg_norm', '2',
+                           '-o', 'retry']
+        print(f"  Retrying order {vo} with deg_norm=2")
+        r2 = subprocess.run(cmd2, cwd=workdir, capture_output=True,
+                            text=True, env=env)
+        if r2.returncode != 0:
+            continue
+        retry_par = os.path.join(workdir, 'retry.par.dat')
+        if not os.path.exists(retry_par):
+            continue
+        retry_rows = parse_pardat(retry_par)
+        # read main header to match column layout
+        with open(pardat) as f:
+            main_header = f.readline().split()
+        for row in retry_rows:
+            vo_row = int(row.get('order', 0))
+            if vo_row == 0 or row.get('prms', -1) < 0:
+                continue
+            # build line matching main header, padding missing columns
+            vals = []
+            for col in main_header:
+                vals.append(str(row.get(col, 0)))
+            with open(pardat, 'a') as f:
+                f.write(' '.join(vals) + '\n')
+            print(f"    Order {vo_row} recovered (prms={row.get('prms', -1):.1f}%)")
+
     return pardat, resdir
+
+
+def _find_missing_orders(pardat, oset):
+    """Find vipere orders in oset range but missing from par.dat."""
+    pars = parse_pardat(pardat)
+    fitted = set()
+    for p in pars:
+        o = int(p.get('order', 0))
+        if o > 0 and p.get('prms', -1) >= 0:
+            fitted.add(o)
+
+    parts = oset.split(':')
+    if len(parts) == 2:
+        expected = set(range(int(parts[0]), int(parts[1])))
+    else:
+        return []
+    return sorted(expected - fitted)
 
 
 def process_one(input_fits, oset=None):
@@ -147,10 +194,27 @@ def process_one(input_fits, oset=None):
 
     workdir = tempfile.mkdtemp(prefix='tellcorr_')
     try:
-        link = os.path.join(workdir, inpath.name)
-        os.symlink(inpath, link)
+        # copy and sanitize: replace extreme negative spikes with NaN
+        # (bad pixels from nodding subtraction that crash vipere's fitter)
+        sanitized = os.path.join(workdir, inpath.name)
+        san_hdul = fits.open(inpath)
+        for chip in [1, 2, 3]:
+            extname = f'CHIP{chip}.INT1'
+            if extname not in san_hdul:
+                continue
+            for col in san_hdul[extname].columns.names:
+                if col.endswith('_SPEC'):
+                    spec = san_hdul[extname].data[col]
+                    med = np.median(spec[np.isfinite(spec)])
+                    bad = spec < -abs(med)
+                    if bad.any():
+                        spec[bad] = np.nan
+                        print(f"  Sanitized {bad.sum()} extreme negative pixels "
+                              f"in {extname} {col}")
+        san_hdul.writeto(sanitized, overwrite=True)
+        san_hdul.close()
 
-        pardat, resdir = run_vipere(link, workdir, setting, oset=oset)
+        pardat, resdir = run_vipere(sanitized, workdir, setting, oset=oset)
         pars = parse_pardat(pardat)
         if not pars:
             raise RuntimeError("vipere par.dat is empty")
