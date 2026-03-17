@@ -105,6 +105,7 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
         '-deg_norm', '4',
         '-deg_wave', '2',
         '-telluric', 'add',
+        '-kapsig', '0',
         '-o', 'tellfit',
     ]
     print(f"Running: {' '.join(cmd)}")
