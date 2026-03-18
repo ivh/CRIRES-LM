@@ -240,13 +240,14 @@ def make_spectrum_plot(dirname, variant=None):
                 wl = seg["wl"]
                 spec = seg["spec"]
                 tellur = seg.get("tellur")
+                cont = seg.get("cont")
                 if tellur:
                     y = [s * t for s, t in zip(spec, tellur)]
                 else:
                     y = spec
                 fig.add_trace(go.Scattergl(
                     x=wl, y=y,
-                    mode="lines", line=dict(color=color, width=1, dash="dot"),
+                    mode="lines", line=dict(color=color, width=1),
                     name=f"B ord {onum:02d}",
                     legendgroup=f"B_{onum}",
                     showlegend=(seg["chip"] == 1),
@@ -256,6 +257,20 @@ def make_spectrum_plot(dirname, variant=None):
                         "WL: %{x:.2f} nm<br>Flux: %{y:.1f}<extra>B</extra>"
                     ),
                 ))
+                if cont and tellur:
+                    model = [c * t for c, t in zip(cont, tellur)]
+                    fig.add_trace(go.Scattergl(
+                        x=wl, y=model,
+                        mode="lines", line=dict(color="black", width=1.5),
+                        name="Model B",
+                        legendgroup="model_b",
+                        showlegend=(i == 0 and seg["chip"] == 1),
+                        visible="legendonly",
+                        hovertemplate=(
+                            f"Ord {onum} Chip {seg['chip']}<br>"
+                            "WL: %{x:.2f} nm<br>Model B: %{y:.1f}<extra></extra>"
+                        ),
+                    ))
 
     # auto-range y-axis using percentiles
     all_vals = []

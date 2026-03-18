@@ -26,6 +26,10 @@
 </dl>
 
 <h2>Spectrum</h2>
+<div style="margin-bottom:0.25rem; display:flex; gap:0.5rem;">
+    <button id="btn-a" class="spec-toggle" onclick="toggleSpecGroup('A')">Hide A</button>
+    <button id="btn-b" class="spec-toggle" onclick="toggleSpecGroup('B')">Show B</button>
+</div>
 <div id="spectrum-plot" style="height:550px; display:flex; align-items:center; justify-content:center; color:#999;">Loading spectrum...</div>
 <script>
     fetch('{{ base }}/api/spectrum/{{ obs.dirname }}{{ variant_qs }}')
@@ -38,8 +42,25 @@
                 Plotly.newPlot(el, fig.data, fig.layout, {responsive: true});
             } else {
                 el.textContent = 'No spectrum data available';
+                document.querySelector('.spec-toggle') && document.querySelectorAll('.spec-toggle').forEach(b => b.style.display = 'none');
             }
         });
+
+    function toggleSpecGroup(group) {
+        var el = document.getElementById('spectrum-plot');
+        var btn = document.getElementById('btn-' + group.toLowerCase());
+        var showing = btn.textContent.startsWith('Hide');
+        var newVis = showing ? false : true;
+        var indices = el.data.map(function(t, i) {
+            var lg = t.legendgroup || '';
+            var match = group === 'A'
+                ? (lg.startsWith('A_') || lg === 'model')
+                : (lg.startsWith('B_') || lg === 'model_b');
+            return match ? i : -1;
+        }).filter(function(i) { return i >= 0; });
+        Plotly.restyle(el, {visible: newVis}, indices);
+        btn.textContent = (newVis ? 'Hide ' : 'Show ') + group;
+    }
 </script>
 
 {% if downloads %}
