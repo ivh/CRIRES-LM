@@ -16,6 +16,7 @@ Reduction of all public CRIRES+ L-band (2.8-4.2 um) and M-band (4.2-5.5 um) scie
 - `deep_flats.sqlite` — metadata for deep L/M flats NDIT>10 same time range (914 rows)
 - `fetch_LM.py` — downloads science frames from LMscience.sqlite, fills nodpos from headers
 - `fetch_deep_flats.py` — downloads deep flat frames from deep_flats.sqlite
+- `update_LMscience.py` — queries ESO TAP for new public L/M science frames since the latest date in LMscience.sqlite and inserts them
 - `flats/` — flat field data: `raw/` has fetched raw flats, `{setting}_{date}/` subdirs each contain `flats.sof` and esorex output
 - `flats/reduce_flats.sh` — runs `esorex cr2res_cal_flat` on all flat subdirs via GNU parallel
 - `cr2res_cal_flat.rc` — recipe parameter file for flat reduction (extract_oversample=8, extract_swath_width=400, extract_smooth_slit=4, extract_smooth_spec=3)
