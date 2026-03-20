@@ -24,10 +24,6 @@ Source: [ESO Telescope Bibliography (telbib)](https://telbib.eso.org/)
 
 - Hmiddouch, S. et al. (2025), "Variations in the volatile-driven activity of comet C/2017 K2 (PanSTARRS) revealed by long-term multiwavelength observations", A&A, 701, A61. [2025A&A...701A..61H](https://ui.adsabs.harvard.edu/abs/2025A&A...701A..61H) [doi:10.1051/0004-6361/202555864](https://doi.org/10.1051/0004-6361/202555864)
 
-## 109.23HN.001
-
-- Lesjak, F. et al. (2025), "Retrieving wind properties from the ultra-hot dayside of WASP-189 b with CRIRES+", A&A, 693, A72. [2025A&A...693A..72L](https://ui.adsabs.harvard.edu/abs/2025A&A...693A..72L) [doi:10.1051/0004-6361/202451391](https://doi.org/10.1051/0004-6361/202451391)
-
 ## 110.23NC.001
 
 - Janson, Markus et al. (2025), "Deep high-resolution L band spectroscopy in the β Pictoris planetary system", A&A, 694, A63. [2025A&A...694A..63J](https://ui.adsabs.harvard.edu/abs/2025A&A...694A..63J) [doi:10.1051/0004-6361/202452411](https://doi.org/10.1051/0004-6361/202452411)
@@ -36,15 +32,9 @@ Source: [ESO Telescope Bibliography (telbib)](https://telbib.eso.org/)
 
 - Kurtovic, Nicolás T. et al. (2026), "MINDS: Young binary systems with JWST/MIRI: Variable water-rich primaries and extended emission", A&A, 705, A97. [2026A&A...705A..97K](https://ui.adsabs.harvard.edu/abs/2026A&A...705A..97K) [doi:10.1051/0004-6361/202554927](https://doi.org/10.1051/0004-6361/202554927)
 
-## 110.249Y.004
-
-- Czesla, S. et al. (2024), "The overflowing atmosphere of WASP-121 b: High-resolution He I λ10833 transmission spectroscopy with VLT/CRIRES+", A&A, 692, A230. [2024A&A...692A.230C](https://ui.adsabs.harvard.edu/abs/2024A&A...692A.230C) [doi:10.1051/0004-6361/202451003](https://doi.org/10.1051/0004-6361/202451003)
-- Lesjak, F. et al. (2023), "Retrieval of the dayside atmosphere of WASP-43b with CRIRES+", A&A, 678, A23. [2023A&A...678A..23L](https://ui.adsabs.harvard.edu/abs/2023A&A...678A..23L) [doi:10.1051/0004-6361/202347151](https://doi.org/10.1051/0004-6361/202347151)
-
 ## 111.254J.004
 
 - Parker, Luke T. et al. (2025), "Limits on the atmospheric metallicity and aerosols of the sub-Neptune GJ 3090 b from high-resolution CRIRES+ spectroscopy", MNRAS, 538, 3263. [2025MNRAS.538.3263P](https://ui.adsabs.harvard.edu/abs/2025MNRAS.538.3263P) [doi:10.1093/mnras/staf469](https://doi.org/10.1093/mnras/staf469)
-- Cont, D. et al. (2024), "Exploring the ultra-hot Jupiter WASP-178b. Constraints on atmospheric chemistry and dynamics from a joint retrieval of VLT/CRIRES+ and space photometric data", A&A, 688, A206. [2024A&A...688A.206C](https://ui.adsabs.harvard.edu/abs/2024A&A...688A.206C) [doi:10.1051/0004-6361/202450064](https://doi.org/10.1051/0004-6361/202450064)
 
 ## 112.26WN.001, 112.26WN.002
 
@@ -52,7 +42,6 @@ Source: [ESO Telescope Bibliography (telbib)](https://telbib.eso.org/)
 
 ## 60.A-9051(A)
 
-- Lavail, A. et al. (2017), "Magnetic fields of intermediate mass T Tauri stars", A&A, 608, A77. [2017A&A...608A..77L](https://ui.adsabs.harvard.edu/abs/2017A&A...608A..77L) [doi:10.1051/0004-6361/201731889](https://doi.org/10.1051/0004-6361/201731889)
 - Blanco Cárdenas, M. W. et al. (2014), "CRIRES-VLT high-resolution spectro-astrometry as a tool in the search for disks inside the cores of planetary nebulae", A&A, 566, A133. [2014A&A...566A.133B](https://ui.adsabs.harvard.edu/abs/2014A&A...566A.133B) [doi:10.1051/0004-6361/201322564](https://doi.org/10.1051/0004-6361/201322564)
 - Gullikson, Kevin; Dodson-Robinson, Sarah (2013), "Detection of Low-Mass-ratio Stellar Binary Systems", AJ, 145, 3. [2013AJ....145....3G](https://ui.adsabs.harvard.edu/abs/2013AJ....145....3G) [doi:10.1088/0004-6256/145/1/3](https://doi.org/10.1088/0004-6256/145/1/3)
 - Figueira, P. et al. (2010), "Radial velocities with CRIRES. Pushing precision down to 5-10 m/s", A&A, 511, A55. [2010A&A...511A..55F](https://ui.adsabs.harvard.edu/abs/2010A&A...511A..55F) [doi:10.1051/0004-6361/200912681](https://doi.org/10.1051/0004-6361/200912681)

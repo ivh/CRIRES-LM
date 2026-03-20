@@ -3,3 +3,5 @@
 !*.tex
 !*.bib
 !crires-lm-paper-plan.md
+!figs/
+!figs/**
