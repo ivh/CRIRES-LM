@@ -575,13 +575,16 @@ def observation(request: Request, dirname: str, variant: str = Query(None)):
         obs["pairs"] = pairs
         obs["unpaired"] = unpaired
 
-    # prev/next within same setting
+    # prev/next within same setting, only those with tellcorr data
     neighbors = conn.execute(
         "SELECT tpl_start FROM observations "
         "WHERE ins_wlen_id = ? ORDER BY date_obs",
         [obs["ins_wlen_id"]],
     ).fetchall()
-    tpl_list = [r[0] for r in neighbors]
+    tpl_list = [
+        r[0] for r in neighbors
+        if reduction_status(_tpl_to_dir.get(r[0], ""), variant).get("tellcorr")
+    ]
     idx = tpl_list.index(tpl_start) if tpl_start in tpl_list else -1
     prev_dir = _tpl_to_dir.get(tpl_list[idx - 1]) if idx > 0 else None
     next_dir = _tpl_to_dir.get(tpl_list[idx + 1]) if idx < len(tpl_list) - 1 else None
