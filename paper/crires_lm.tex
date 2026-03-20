@@ -1,6 +1,15 @@
 \documentclass{aa}
 
 \usepackage{txfonts}
+\usepackage{orcidlink}
+
+% suppress A&A journal header for arXiv preprint
+\makeatletter
+\renewcommand*\aa@journalname{arXiv-only}
+\renewcommand*\aa@manuscriptname{}
+\renewcommand*\aa@publishlink{}
+\renewcommand*\aa@textidlineempty{} % TODO: set to arXiv:XXXX.XXXXX after submission
+\makeatother
 
 \newcommand{\crires}{CRIRES$^+$}
 \newcommand{\um}{$\mu$m}
@@ -11,20 +20,30 @@
 
 \begin{document}
 
-\title{CRIRES$^+$ L- and M-band spectral archive with telluric-calibrated slit tilt and wavelength solutions}
+\title{CRIRES$^+$ L- and M-band spectral archive with telluric-calibrated slit
+ tilt and wavelength solutions}
+\titlerunning{CRIRES$^+$ L/M-band spectral archive}
 
-\author{I.\,V.~Hartogs\inst{1}}
+\author{Thomas Marquart\inst{1}\,\orcidlink{0000-0002-2244-9920}}
+\authorrunning{T.\ Marquart}
 
 \institute{Department of Physics and Astronomy, Uppsala University,
   Box 516, SE-75120 Uppsala, Sweden\\
-  \email{tom@placeholder.se}}
+  \email{thomas.marquart@astro.uu.se}}
 
-\date{Received ???; accepted ???}
+\date{March 2026}
+
+% TODOs
+%
+% * why only flats, no bpm, dark, etc
+% * xcorr tried but no avail
+% * check bet_Pic_M4318_2023-11-01_05255_2 after rerun
+% * choice to neglect in detector-order
 
 \abstract{
 We present a uniformly reprocessed archive of all public \crires{} L-band
 (2.8--4.2\,\um) and M-band (4.2--5.5\,\um) science observations obtained
-between September 2021 and January 2025, totalling 11\,131 raw frames
+between September 2021 and March 2025, totalling 11\,131 raw frames
 across 16 wavelength settings. The reprocessing improves upon the standard
 ESO pipeline by incorporating a slit tilt calibration derived from
 telluric standard observations, per-observation flexure correction of the
@@ -35,7 +54,7 @@ interactive web archive.
 }
 
 \keywords{infrared: general -- techniques: spectroscopic -- atmospheric effects --
-methods: data analysis}
+methods: data analysis -- instrumentation: spectrographs}
 
 \maketitle
 
@@ -46,7 +65,9 @@ methods: data analysis}
 \crires{} is the upgraded cryogenic high-resolution infrared echelle
 spectrograph at ESO's Very Large Telescope \citep{Dorn2023}. It provides
 cross-dispersed spectroscopy from 0.95 to 5.3\,\um{} with a spectral
-resolving power up to $R \approx 100\,000$, recording three detector chips
+resolving power of $R \approx 100\,000$, recording cross-dispersed long-slit
+spectra on 
+three HAWAII2RG detectors
 of $2048 \times 2048$ pixels each with 5--7 echelle orders per chip.
 
 While the near-infrared ($YJHK$) modes of \crires{} are well supported by
@@ -148,8 +169,11 @@ L/M bands, so the observed spectral features are purely telluric. Each
 standard is observed with an AB nod pair along the slit.
 
 We reduce each nod pair with \esorex{} \texttt{cr2res\_obs\_nodding} and
-then fit the extracted A and B spectra independently with \vipere{}
-\citep{vipere}, a forward-modelling tool that simultaneously fits the
+then fit the extracted A and B spectra independently with \vipere{},
+a fork of the \texttt{viper}\footnote{\url{https://github.com/mzechmeister/viper}}
+tool \citep{viper} adapted for
+CRIRES+\footnote{\url{https://git.astro.lavail.net/alexis/vipere}},
+a forward-modelling tool that simultaneously fits the
 telluric absorption, wavelength solution, continuum, and instrumental
 profile. The key output is a wavelength polynomial per detector order and
 per nod position.
@@ -279,6 +303,14 @@ template views. The full reduction code is available at
 
 
 %--------------------------------------------------------------------
+\section{Use of AI tools}
+\label{sec:ai}
+
+% TODO: write this section
+Claude Opus 4.6 \citep{claude_opus46} was used ...
+
+
+%--------------------------------------------------------------------
 \section{Summary}
 \label{sec:summary}
 
@@ -294,7 +326,7 @@ The resulting archive is browsable and downloadable at
 Based on data obtained from the ESO Science Archive Facility under
 programmes listed at the archive URL. This work made use of the
 \crtwores{} pipeline \citep{cr2res} and the \vipere{} telluric fitting
-tool \citep{vipere}.
+tool, a fork of \texttt{viper} \citep{viper}.
 \end{acknowledgements}
 
 
