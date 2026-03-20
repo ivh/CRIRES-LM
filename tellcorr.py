@@ -101,7 +101,7 @@ def run_vipere(extracted_fits, workdir, setting, oset=None):
         'uv', 'run', '--with-editable', str(Path.home() / 'vipere.git'), 'vipere',
         str(extracted_fits),
         '-plot', '0',
-        '-vcut', '10',
+        '-vcut', '100',
         '-deg_wave', '2',
         '-telluric', 'add',
         '-kapsig', '0',
@@ -194,10 +194,10 @@ def process_one(input_fits, oset=None):
 
     workdir = tempfile.mkdtemp(prefix='tellcorr_')
     try:
-        # copy and sanitize: replace extreme negative spikes with NaN
-        # (bad pixels from nodding subtraction that crash vipere's fitter)
+        # copy and sanitize before passing to vipere
         sanitized = os.path.join(workdir, inpath.name)
         san_hdul = fits.open(inpath)
+        edge_mask = 5  # NaN out first/last N pixels per detector segment
         for chip in [1, 2, 3]:
             extname = f'CHIP{chip}.INT1'
             if extname not in san_hdul:
@@ -205,7 +205,11 @@ def process_one(input_fits, oset=None):
             for col in san_hdul[extname].columns.names:
                 if col.endswith('_SPEC'):
                     spec = san_hdul[extname].data[col]
-                    med = np.median(spec[np.isfinite(spec)])
+                    # mask detector edge pixels (extraction artifacts)
+                    spec[:edge_mask] = np.nan
+                    spec[-edge_mask:] = np.nan
+                    # mask extreme negative spikes (bad nodding subtraction)
+                    med = np.nanmedian(spec)
                     bad = spec < -abs(med)
                     if bad.any():
                         spec[bad] = np.nan
