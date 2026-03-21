@@ -279,6 +279,54 @@ where available. For unfitted orders, wavelengths are interpolated using a
 order number) to the \vipere{} wavelengths of the fitted orders on the
 same chip.
 
+The precision of the \vipere{} wavelength solution on science data is
+assessed using four complementary metrics (Fig.~\ref{fig:wlprecision}).
+Since \vipere{} fits each detector segment independently, the rigid
+mechanical coupling between the three \crires{} detectors provides a
+built-in consistency check: the wavelength gap between chip centres at a
+given echelle order is a physical constant, so its scatter across
+observations measures the fit repeatability. Analogous gaps between
+adjacent orders on the same chip provide an independent check. Most
+directly, the A and B nod positions of each observation receive
+independent \vipere{} fits to the same telluric spectrum; their
+wavelength difference at a given pixel should be constant (reflecting the
+slit tilt) with scatter determined only by fit noise.
+
+We evaluate the wavelength at detector centre (pixel~1024) for each
+fitted segment in all 1924 science observations with at least one order
+passing the quality filter ($\mathrm{prms} < 10$), and compute the
+deviation of each measurement from the median across all observations of
+the same wavelength setting, chip, and order. The A--B comparison yields
+the tightest constraint, with a median per-group RMS of 938\,m\,s$^{-1}$
+across 137 well-behaved groups. Since each A--B difference combines the
+noise of two independent fits, the implied single-fit precision is
+$938 / \sqrt{2} \approx 660$\,m\,s$^{-1}$.  The inter-chip and
+inter-order gap metrics give median RMS values of 1234 and
+1461\,m\,s$^{-1}$, respectively, while the absolute wavelength
+repeatability (which additionally includes real observation-to-observation
+variations from atmospheric and instrumental changes) has a median RMS of
+${\sim}3$\,\kms. These results apply to orders with sufficient telluric
+line density for a well-constrained fit; orders near atmospheric
+transmission windows or the CO$_2$ fundamental band show significantly
+larger scatter.
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=\textwidth]{figs/wavelength_precision.png}
+  \caption{Wavelength precision of the \vipere{} fits to science spectra,
+    assessed via four metrics. \emph{Top left:} absolute repeatability of
+    the wavelength at pixel~1024 per (setting, chip, order) group, with
+    symbol size proportional to the number of measurements.
+    \emph{Top centre:} distribution of per-group RMS for groups with
+    RMS\,$<$\,5\,\kms. \emph{Top right:} A--B difference scatter, the
+    tightest metric (median 938\,m\,s$^{-1}$).
+    \emph{Bottom left and centre:} inter-chip and inter-order gap scatter.
+    \emph{Bottom right:} cumulative distribution of per-group RMS for all
+    four metrics, showing the hierarchy from A--B (tightest) to absolute
+    (broadest).}
+  \label{fig:wlprecision}
+\end{figure*}
+
 
 %--------------------------------------------------------------------
 \section{The archive}
