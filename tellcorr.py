@@ -64,15 +64,17 @@ def parse_pardat(parfile):
     return rows
 
 
-def vipere_order_to_chip_order(vorder, max_order):
+def vipere_order_to_chip_order(vorder, max_per_chip):
     """vipere order 1 = chip1 of highest DRS order number, etc.
 
-    max_order is the highest order number in the FITS (e.g. 7 for M4504),
-    matching vipere's own n_orders = max(order numbers).
+    max_per_chip is a dict {1: max1, 2: max2, 3: max3} giving the highest
+    order number per chip in the extracted FITS.  Vipere determines its
+    n_orders per chip independently, so chips with fewer orders get a
+    different mapping.
     """
     order_idx, det0 = divmod(vorder - 1, 3)
     chip = det0 + 1
-    order_drs = max_order - order_idx
+    order_drs = max_per_chip[chip] - order_idx
     return chip, order_drs
 
 
@@ -185,11 +187,16 @@ def process_one(input_fits, oset=None):
     if n_opc is None:
         raise ValueError(f"Unknown setting: {setting}")
 
-    # max DRS order number from FITS columns (what vipere uses internally)
-    max_order = max(
-        int(c.split('_')[0])
-        for c in hdul['CHIP1.INT1'].columns.names if c.endswith('_SPEC')
-    )
+    # per-chip max DRS order number from FITS columns (vipere determines
+    # n_orders per chip independently)
+    max_order = {}
+    for chip in [1, 2, 3]:
+        ext = f'CHIP{chip}.INT1'
+        if ext in hdul:
+            max_order[chip] = max(
+                int(c.split('_')[0])
+                for c in hdul[ext].columns.names if c.endswith('_SPEC')
+            )
     print(f"Setting: {setting}, {n_opc} orders/chip, max order {max_order}")
 
     workdir = tempfile.mkdtemp(prefix='tellcorr_')

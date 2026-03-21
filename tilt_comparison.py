@@ -28,11 +28,13 @@ import matplotlib.pyplot as plt
 from astropy.io import fits
 
 
+_u = lambda n: {1: n, 2: n, 3: n}
 MAX_ORDER = {
-    'L3244': 7, 'L3262': 7, 'L3302': 7, 'L3340': 7,
-    'L3377': 8, 'L3412': 8, 'L3426': 8,
-    'M4187': 7, 'M4211': 8, 'M4266': 8, 'M4318': 8,
-    'M4368': 8, 'M4416': 8, 'M4461': 8, 'M4504': 8, 'M4519': 9,
+    'L3244': _u(7), 'L3262': _u(7), 'L3302': _u(7), 'L3340': _u(7),
+    'L3377': _u(8), 'L3412': _u(8), 'L3426': _u(8),
+    'M4187': _u(7), 'M4211': {1: 8, 2: 6, 3: 7}, 'M4266': _u(8),
+    'M4318': _u(8), 'M4368': _u(8), 'M4416': _u(8),
+    'M4461': {1: 7, 2: 8, 3: 8}, 'M4504': _u(7), 'M4519': _u(9),
 }
 
 PIXEL_SCALE = 0.059  # arcsec/pixel
@@ -57,10 +59,10 @@ def parse_pardat(path):
     return rows
 
 
-def vipere_order_to_chip_order(vorder, max_order):
+def vipere_order_to_chip_order(vorder, max_per_chip):
     order_idx, det0 = divmod(vorder - 1, 3)
     chip = det0 + 1
-    order_drs = max_order - order_idx
+    order_drs = max_per_chip[chip] - order_idx
     return chip, order_drs
 
 

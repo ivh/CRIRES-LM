@@ -49,10 +49,10 @@ def get_coeffs(par, prefix):
     return coeffs
 
 
-def vipere_order_to_chip_order(vorder, max_order):
+def vipere_order_to_chip_order(vorder, max_per_chip):
     order_idx, det0 = divmod(vorder - 1, 3)
     chip = det0 + 1
-    order_drs = max_order - order_idx
+    order_drs = max_per_chip[chip] - order_idx
     return chip, order_drs
 
 
@@ -166,10 +166,14 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
     with open(xcen_file) as f:
         xcen_map = json.load(f)
 
-    max_order = max(
-        int(c.split('_')[0])
-        for c in hdul['CHIP1.INT1'].columns.names if c.endswith('_SPEC')
-    )
+    max_order = {}
+    for chip in [1, 2, 3]:
+        ext = f'CHIP{chip}.INT1'
+        if ext in hdul:
+            max_order[chip] = max(
+                int(c.split('_')[0])
+                for c in hdul[ext].columns.names if c.endswith('_SPEC')
+            )
 
     chip_solutions = {1: [], 2: [], 3: []}
 
