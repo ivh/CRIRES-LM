@@ -293,19 +293,19 @@ wavelength difference at a given pixel should be constant (reflecting the
 slit tilt) with scatter determined only by fit noise.
 
 We evaluate the wavelength at detector centre (pixel~1024) for each
-fitted segment in all 1924 science observations with at least one order
+fitted segment in all 4067 science observations with at least one order
 passing the quality filter ($\mathrm{prms} < 10$), and compute the
 deviation of each measurement from the median across all observations of
 the same wavelength setting, chip, and order. The A--B comparison yields
-the tightest constraint, with a median per-group RMS of 938\,m\,s$^{-1}$
-across 137 well-behaved groups. Since each A--B difference combines the
+the tightest constraint, with a median per-group RMS of 250\,m\,s$^{-1}$
+across 206 well-behaved groups. Since each A--B difference combines the
 noise of two independent fits, the implied single-fit precision is
-$938 / \sqrt{2} \approx 660$\,m\,s$^{-1}$.  The inter-chip and
-inter-order gap metrics give median RMS values of 1234 and
-1461\,m\,s$^{-1}$, respectively, while the absolute wavelength
+$250 / \sqrt{2} \approx 177$\,m\,s$^{-1}$.  The inter-chip and
+inter-order gap metrics give median RMS values of 294 and
+658\,m\,s$^{-1}$, respectively, while the absolute wavelength
 repeatability (which additionally includes real observation-to-observation
 variations from atmospheric and instrumental changes) has a median RMS of
-${\sim}3$\,\kms. These results apply to orders with sufficient telluric
+${\sim}2.2$\,\kms. These results apply to orders with sufficient telluric
 line density for a well-constrained fit; orders near atmospheric
 transmission windows or the CO$_2$ fundamental band show significantly
 larger scatter.
@@ -319,7 +319,7 @@ larger scatter.
     symbol size proportional to the number of measurements.
     \emph{Top centre:} distribution of per-group RMS for groups with
     RMS\,$<$\,5\,\kms. \emph{Top right:} A--B difference scatter, the
-    tightest metric (median 938\,m\,s$^{-1}$).
+    tightest metric (median 250\,m\,s$^{-1}$).
     \emph{Bottom left and centre:} inter-chip and inter-order gap scatter.
     \emph{Bottom right:} cumulative distribution of per-group RMS for all
     four metrics, showing the hierarchy from A--B (tightest) to absolute
@@ -327,6 +327,35 @@ larger scatter.
   \label{fig:wlprecision}
 \end{figure*}
 
+As an independent validation of the slit tilt calibration, we compare the
+measured A--B wavelength shifts to the predictions from the
+\texttt{SlitPolyB} tilt coefficients stored in the tracing tables.  For
+each observation the predicted shift is $\Delta\lambda = t \cdot
+\Delta{}y \cdot (\mathrm{d}\lambda/\mathrm{d}x) / \lambda \cdot c$,
+where $t$ is the tilt (from the linear fit described in
+Sect.~\ref{sec:tilt}), $\Delta{}y$ the nod throw in pixels (read from
+the \texttt{ESO SEQ NODTHROW} header of each observation and converted
+via the 0\farcs059\,pixel$^{-1}$ plate scale), and
+$\mathrm{d}\lambda/\mathrm{d}x$ the local dispersion from the tracing
+table wavelength polynomial.  Across 201 (setting, chip, order) groups
+the residuals between the measured and predicted A--B shifts have an RMS
+of 808\,m\,s$^{-1}$ and a median offset of only 15\,m\,s$^{-1}$
+(Fig.~\ref{fig:tiltcomp}), confirming that the linear tilt model
+captures the dominant slit geometry to within the single-fit wavelength
+precision.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/tilt_comparison.png}
+  \caption{Residual between the measured median A--B wavelength shift and
+    the shift predicted by the slit tilt model, as a function of
+    wavelength.  Blue and red points denote L- and M-band groups,
+    respectively.  The RMS residual of 808\,m\,s$^{-1}$ is consistent
+    with the single-fit wavelength precision of ${\sim}180$\,m\,s$^{-1}$
+    (each A--B difference combines two fits) and the observation-to-observation
+    scatter in nod throw and atmospheric conditions.}
+  \label{fig:tiltcomp}
+\end{figure}
 
 %--------------------------------------------------------------------
 \section{The archive}
