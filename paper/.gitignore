@@ -1,7 +1,7 @@
 *
 !.gitignore
-!*.tex
-!*.bib
+!crires_lm.tex
+!crires_lm.bib
 !crires-lm-paper-plan.md
 !figs/
 !figs/**
