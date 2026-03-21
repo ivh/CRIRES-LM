@@ -246,11 +246,7 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
         wl_samples = np.array(wl_samples)
         dv_samples = np.array(dv_samples)
 
-        # use linear unless good orders span most of the wavelength range
-        wl_span = wl_samples.max() - wl_samples.min()
-        full_span = max(w.max() for w in pipeline_wl.values()) - min(w.min() for w in pipeline_wl.values())
-        well_covered = wl_span > 0.6 * full_span
-        deg = 2 if (n_good >= 6 and well_covered) else 1
+        deg = 1
         dv_coeffs = np.polyfit(wl_samples, dv_samples, deg)
         resid = dv_samples - np.polyval(dv_coeffs, wl_samples)
         print(f"  dv correction fit: {n_good} good orders, deg={deg}, "
