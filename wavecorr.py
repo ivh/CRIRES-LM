@@ -3,11 +3,12 @@
 # requires-python = ">=3.10"
 # dependencies = ["numpy", "astropy", "matplotlib"]
 # ///
-"""Update wavelength scale in _tellcorr.fits using vipere solutions + 2D interpolation.
+"""Update wavelength scale in _tellcorr.fits using vipere solutions.
 
 For orders with a vipere fit: uses the fitted wavelength polynomial directly.
-For orders without: interpolates the wavelength *correction* (vipere - pipeline)
-from a 2D polynomial fit delta_wl(x, order_number), fitted per chip.
+For orders without: fits a velocity correction dv(wavelength) across all 3 chips
+and applies it to the pipeline wavelength. The correction is smooth because the
+chips are at fixed relative positions.
 
 Requires tellfit_{A,B}.par.dat and tellfit_{A,B}_xcen.json from tellcorr.py.
 """
@@ -56,107 +57,61 @@ def vipere_order_to_chip_order(vorder, max_per_chip):
     return chip, order_drs
 
 
-def fit_2d_wavelength(chip_data, deg_x=2, deg_ord=2):
-    """Fit 2D polynomial to vipere wavelengths wl(x, order) on one chip.
-
-    chip_data: list of (order_number, xcen, wave_coeffs)
-    Returns function(x_array, order_number) -> wl in nm.
-    """
-    xs, ords, wls = [], [], []
-    for odrs, xcen, wcoeffs in chip_data:
-        xsamp = np.linspace(0, 2047, 20).astype(int)
-        wl_vip = np.polynomial.polynomial.polyval(
-            xsamp - xcen, wcoeffs) / 10.0
-        xs.extend(xsamp.astype(float))
-        ords.extend([float(odrs)] * len(xsamp))
-        wls.extend(wl_vip)
-
-    xs = np.array(xs)
-    ords = np.array(ords)
-    wls = np.array(wls)
-
-    x_mean, x_std = xs.mean(), xs.std()
-    o_mean, o_std = ords.mean(), max(ords.std(), 1.0)
-    xn = (xs - x_mean) / x_std
-    on = (ords - o_mean) / o_std
-
-    powers = []
-    for i in range(deg_x + 1):
-        for j in range(deg_ord + 1):
-            powers.append((i, j))
-    A = np.column_stack([xn**i * on**j for i, j in powers])
-
-    coeffs, _, _, _ = np.linalg.lstsq(A, wls, rcond=None)
-
-    resid = wls - A @ coeffs
-    mean_wl = np.mean(wls)
-    rms_ms = np.std(resid) / mean_wl * 3e8
-    print(f"    2D wavelength fit: {len(chip_data)} orders, "
-          f"{len(xs)} points, rms={rms_ms:.0f} m/s")
-
-    def eval_2d(x_arr, order_num):
-        xn_ = (x_arr - x_mean) / x_std
-        on_ = (order_num - o_mean) / o_std
-        result = np.zeros_like(x_arr, dtype=float)
-        for (i, j), c in zip(powers, coeffs):
-            result += c * xn_**i * on_**j
-        return result
-
-    return eval_2d, (x_mean, x_std, o_mean, o_std, powers, coeffs)
+MAX_DV_KMS = 100.0  # reject corrections larger than this
+MAX_PRMS_FOR_CORRECTION = 30.0  # only use orders with prms < this for the dv fit
 
 
-def plot_2d_wavelength(chip_data, fit_info, eval_2d, chip,
-                       orders_in_chip, unfitted_orders, outpath, ab=''):
-    """3D plot of wavelength surface and fitted data points."""
-    x_mean, x_std, o_mean, o_std, powers, coeffs = fit_info
+def plot_velocity_correction(vipere_wl, pipeline_wl, vipere_prms, dv_coeffs,
+                             all_unfitted, outpath, ab=''):
+    """Plot dv vs wavelength: fitted orders as dots, correction curve, unfitted markers."""
+    chip_colors = {1: 'C0', 2: 'C1', 3: 'C2'}
+    fig, ax = plt.subplots(figsize=(12, 5))
 
-    fig = plt.figure(figsize=(10, 7))
-    ax = fig.add_subplot(111, projection='3d')
+    for (chip, odrs), vip_wl in sorted(vipere_wl.items()):
+        key = (chip, odrs)
+        if key not in pipeline_wl:
+            continue
+        pipe_wl = pipeline_wl[key]
+        idx = np.linspace(100, 1947, 50).astype(int)
+        dv = 3e5 * (vip_wl[idx] - pipe_wl[idx]) / pipe_wl[idx]
+        good = vipere_prms.get(key, 999) < MAX_PRMS_FOR_CORRECTION
+        ax.scatter(pipe_wl[idx], dv, s=4, color=chip_colors[chip],
+                   alpha=0.6 if good else 0.15, marker='o' if good else 'x')
 
-    xline = np.linspace(0, 2047, 100)
+    wl_range = np.linspace(
+        min(w.min() for w in pipeline_wl.values()),
+        max(w.max() for w in pipeline_wl.values()),
+        500)
 
-    # data points
-    for odrs, xcen, wcoeffs in chip_data:
-        xsamp = np.linspace(0, 2047, 20).astype(int)
-        wl_vip = np.polynomial.polynomial.polyval(
-            xsamp - xcen, wcoeffs) / 10.0
-        ax.scatter(xsamp, [odrs] * len(xsamp), wl_vip,
-                   s=10, zorder=5)
+    if dv_coeffs is not None:
+        dv_fit = np.polyval(dv_coeffs, wl_range)
+        ax.plot(wl_range, dv_fit, 'k-', lw=1.5, label=f'fit (deg {len(dv_coeffs)-1})')
+        ax.axhspan(-MAX_DV_KMS, MAX_DV_KMS, alpha=0.05, color='green')
 
-    # lines from the surface for each order
-    fitted_set = set(s[0] for s in chip_data)
-    for odrs in orders_in_chip:
-        wl_line = eval_2d(xline, odrs)
-        if odrs in unfitted_orders:
-            ax.plot(xline, [odrs] * len(xline), wl_line,
-                    color='C3', lw=1.5, ls='--', zorder=4)
-        else:
-            ax.plot(xline, [odrs] * len(xline), wl_line,
-                    color='C2', lw=1, alpha=0.7, zorder=4)
+    for chip, odrs in all_unfitted:
+        key = (chip, odrs)
+        if key not in pipeline_wl:
+            continue
+        wl_mid = pipeline_wl[key][1024]
+        ax.axvline(wl_mid, color=chip_colors[chip], ls=':', alpha=0.4, lw=0.8)
+        ax.text(wl_mid, ax.get_ylim()[1] if ax.get_ylim()[1] != 1 else 5,
+                f'{odrs}', fontsize=7, ha='center', va='bottom',
+                color=chip_colors[chip])
 
-    # fitted surface
-    all_orders = sorted(fitted_set)
-    o_min = min(min(all_orders), min(orders_in_chip)) - 0.5
-    o_max = max(max(all_orders), max(orders_in_chip)) + 0.5
-    xg = np.linspace(0, 2047, 50)
-    og = np.linspace(o_min, o_max, 50)
-    XG, OG = np.meshgrid(xg, og)
-    WL = eval_2d(XG.ravel(), OG.ravel()).reshape(XG.shape)
-    ax.plot_surface(XG, OG, WL, alpha=0.2, color='C0')
-
-    ax.plot([], [], color='C2', lw=1, label='fitted orders')
-    ax.plot([], [], color='C3', lw=1.5, ls='--', label='interpolated orders')
-    ax.legend(loc='upper left', fontsize=8)
-
-    ax.view_init(elev=25, azim=-225)
-    ax.set_xlabel('pixel')
-    ax.set_ylabel('order')
-    ax.set_zlabel('wavelength [nm]')
-    ax.set_title(f'chip {chip} wavelength fit ({ab})' if ab else f'chip {chip} wavelength fit')
-
-    fig.savefig(outpath, dpi=150, bbox_inches='tight')
+    from matplotlib.lines import Line2D
+    handles = [Line2D([], [], color=chip_colors[i], marker='o', ls='',
+                       markersize=4, label=f'CHIP{i}') for i in [1, 2, 3]]
+    if dv_coeffs is not None:
+        handles.append(Line2D([], [], color='k', lw=1.5, label='fit'))
+    ax.legend(handles=handles, fontsize=9)
+    ax.set_xlabel('Wavelength [nm]')
+    ax.set_ylabel('dv (vipere - pipeline) [km/s]')
+    ax.set_title(f'Velocity correction ({ab})' if ab else 'Velocity correction')
+    ax.axhline(0, color='gray', lw=0.5)
+    fig.tight_layout()
+    fig.savefig(outpath, dpi=150)
     plt.close(fig)
-    print(f"    Wrote {outpath}")
+    print(f"  Wrote {outpath}")
 
 
 def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
@@ -195,55 +150,115 @@ def process_one(tellcorr_fits, pardat_file, xcen_file, ab='A'):
             continue
         xcen = xcen_map[xcen_key]
 
-        chip_solutions[chip].append((odrs, xcen, wcoeffs))
+        chip_solutions[chip].append((odrs, xcen, wcoeffs, prms))
 
     pixels = np.arange(2048, dtype=float)
 
+    # read pipeline WL for all orders before any modification
+    pipeline_wl = {}
     for chip in [1, 2, 3]:
-        solutions = chip_solutions[chip]
+        ext = f'CHIP{chip}.INT1'
+        for col in hdul[ext].columns.names:
+            if col.endswith('_WL'):
+                order = int(col.split('_')[0])
+                pipeline_wl[(chip, order)] = hdul[ext].data[col].copy()
+
+    # compute vipere WL for all fitted orders
+    vipere_wl = {}
+    vipere_prms = {}
+    for chip, solutions in chip_solutions.items():
+        for odrs, xcen, wcoeffs, prms in solutions:
+            wl = np.polynomial.polynomial.polyval(
+                pixels - xcen, wcoeffs) / 10.0
+            vipere_wl[(chip, odrs)] = wl
+            vipere_prms[(chip, odrs)] = prms
+
+    # apply direct vipere WL for fitted orders
+    for (chip, odrs), wl in vipere_wl.items():
+        wl_col = f"{odrs:02d}_01_WL"
+        ext = f'CHIP{chip}.INT1'
+        if wl_col in hdul[ext].columns.names:
+            hdul[ext].data[wl_col] = wl
+
+    # identify unfitted orders across all chips
+    all_unfitted = []
+    for chip in [1, 2, 3]:
+        ext = f'CHIP{chip}.INT1'
         orders_in_chip = sorted(set(
             int(c.split('_')[0])
-            for c in hdul[f'CHIP{chip}.INT1'].columns.names if c.endswith('_SPEC')
+            for c in hdul[ext].columns.names if c.endswith('_SPEC')
         ))
+        fitted_set = set(s[0] for s in chip_solutions[chip])
+        for odrs in orders_in_chip:
+            if odrs not in fitted_set:
+                all_unfitted.append((chip, odrs))
 
-        fitted_orders = set(s[0] for s in solutions)
-        unfitted_orders = [o for o in orders_in_chip if o not in fitted_orders]
+    n_fitted = len(vipere_wl)
+    good_for_corr = {k for k, p in vipere_prms.items()
+                     if p < MAX_PRMS_FOR_CORRECTION}
+    n_good = len(good_for_corr)
+    print(f"  {n_fitted} fitted orders ({n_good} with prms<{MAX_PRMS_FOR_CORRECTION}), "
+          f"{len(all_unfitted)} unfitted")
+    for chip in [1, 2, 3]:
+        fitted = sorted(s[0] for s in chip_solutions[chip])
+        unfitted = [o for c, o in all_unfitted if c == chip]
+        print(f"    chip{chip}: fitted={fitted}, unfitted={unfitted}")
 
-        print(f"  chip{chip}: fitted={sorted(fitted_orders)}, "
-              f"unfitted={unfitted_orders}")
+    dv_coeffs = None
 
-        if not solutions:
-            print(f"    no solutions, skipping")
-            continue
-
-        # direct vipere WL for fitted orders
-        for odrs, xcen, wcoeffs in solutions:
-            wl_col = f"{odrs:02d}_01_WL"
-            if wl_col not in hdul[f'CHIP{chip}.INT1'].columns.names:
+    if all_unfitted and n_good >= 3:
+        # collect (wavelength, dv) samples from good orders across all chips
+        wl_samples = []
+        dv_samples = []
+        for (chip, odrs), vip_wl in vipere_wl.items():
+            if (chip, odrs) not in good_for_corr:
                 continue
-            wl_vipere = np.polynomial.polynomial.polyval(
-                pixels - xcen, wcoeffs) / 10.0
-            hdul[f'CHIP{chip}.INT1'].data[wl_col] = wl_vipere
+            key = (chip, odrs)
+            if key not in pipeline_wl:
+                continue
+            pipe_wl = pipeline_wl[key]
+            idx = np.linspace(100, 1947, 20).astype(int)
+            dv = 3e5 * (vip_wl[idx] - pipe_wl[idx]) / pipe_wl[idx]
+            wl_samples.extend(pipe_wl[idx])
+            dv_samples.extend(dv)
 
-        # 2D interpolation for unfitted orders
-        if unfitted_orders and len(solutions) >= 2:
-            eval_2d, fit_info = fit_2d_wavelength(solutions)
-            plot_2d_wavelength(
-                solutions, fit_info, eval_2d, chip,
-                orders_in_chip, unfitted_orders,
-                Path(tellcorr_fits).parent / f'wavecorr_chip{chip}_{ab}.png',
-                ab=ab)
-            for odrs in unfitted_orders:
-                wl_col = f"{odrs:02d}_01_WL"
-                if wl_col not in hdul[f'CHIP{chip}.INT1'].columns.names:
-                    continue
-                wl_interp = eval_2d(pixels, odrs)
-                hdul[f'CHIP{chip}.INT1'].data[wl_col] = wl_interp
-                print(f"    order {odrs:02d}: interpolated "
-                      f"(center wl {wl_interp[1024]:.2f} nm)")
-        elif unfitted_orders:
-            print(f"    too few fitted orders for 2D fit, "
-                  f"unfitted orders keep pipeline WL")
+        wl_samples = np.array(wl_samples)
+        dv_samples = np.array(dv_samples)
+
+        # use linear unless good orders span most of the wavelength range
+        wl_span = wl_samples.max() - wl_samples.min()
+        full_span = max(w.max() for w in pipeline_wl.values()) - min(w.min() for w in pipeline_wl.values())
+        well_covered = wl_span > 0.6 * full_span
+        deg = 2 if (n_good >= 6 and well_covered) else 1
+        dv_coeffs = np.polyfit(wl_samples, dv_samples, deg)
+        resid = dv_samples - np.polyval(dv_coeffs, wl_samples)
+        print(f"  dv correction fit: {n_good} good orders, deg={deg}, "
+              f"rms={np.std(resid)*1e3:.0f} m/s")
+
+        for chip, odrs in all_unfitted:
+            key = (chip, odrs)
+            if key not in pipeline_wl:
+                continue
+            pipe_wl = pipeline_wl[key]
+            dv_corr = np.polyval(dv_coeffs, pipe_wl)
+            if np.max(np.abs(dv_corr)) > MAX_DV_KMS:
+                print(f"    chip{chip} order {odrs:02d}: correction "
+                      f"{np.median(dv_corr):.1f} km/s exceeds limit, "
+                      f"keeping pipeline WL")
+                continue
+            corrected = pipe_wl * (1 + dv_corr / 3e5)
+            wl_col = f"{odrs:02d}_01_WL"
+            ext = f'CHIP{chip}.INT1'
+            if wl_col in hdul[ext].columns.names:
+                hdul[ext].data[wl_col] = corrected
+                print(f"    chip{chip} order {odrs:02d}: corrected by "
+                      f"{np.median(dv_corr):.2f} km/s")
+    elif all_unfitted:
+        print(f"  only {n_good} good orders (need 3), unfitted keep pipeline WL")
+
+    plot_velocity_correction(
+        vipere_wl, pipeline_wl, vipere_prms, dv_coeffs, all_unfitted,
+        Path(tellcorr_fits).parent / f'wavecorr_{ab}.png', ab=ab)
 
     hdul.flush()
     hdul.close()
@@ -275,7 +290,7 @@ def process_dir(dir_path):
 def main():
     parser = argparse.ArgumentParser(
         description='Update wavelength scale in tellcorr FITS using '
-                    'vipere solutions + 2D interpolation')
+                    'vipere solutions + velocity correction')
     parser.add_argument('dir', help='Reduction directory')
     args = parser.parse_args()
     process_dir(args.dir)
