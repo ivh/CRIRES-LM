@@ -41,6 +41,7 @@
 % * choice to neglect in-detector-order tilt
 % * caveats: obs taken for spatial resolution or extenden obj have no use of this
 % * random findings, eg no-metrology data not flat-fieldable
+% * at first _tw update, some wl were kept at ppl values bc bad fits, later fixed with median from all obs, that now matches all wl in the trace files nicely.
 
 \abstract{
 We present a uniformly reprocessed archive of all public \crires{} L-band
@@ -289,10 +290,28 @@ region near 4.26\,\um), the original uncorrected spectrum is retained
 with the telluric transmission column set to NaN.
 
 Wavelengths in the output spectra are updated using the \vipere{} fit
-where available. For unfitted orders, wavelengths are interpolated using a
-2D polynomial surface fit (degree 2 in both pixel position and spectral
-order number) to the \vipere{} wavelengths of the fitted orders on the
-same chip.
+where available. For detector orders without a successful fit (due to weak
+telluric features, the CO$_2$-saturated region, or low signal-to-noise),
+the wavelength scale is corrected by fitting a linear velocity offset
+$\Delta v(\lambda)$ to the differences between the \vipere{} and
+reference wavelengths of all well-fitted orders (percentage residual RMS
+$< 30$) across all three detector chips simultaneously. The three chips
+are at fixed relative positions in the focal plane, so the wavelength
+correction varies smoothly across the full spectral range and pooling all
+chips provides a well-constrained fit even when individual chips have few
+fitted orders. The resulting correction, typically 1--5\,\kms{}, is
+applied to the reference wavelength polynomial from the tracing table.
+A correction exceeding 100\,\kms{} is considered unphysical and the
+order retains the reference wavelength.
+
+An earlier version used a 2D polynomial surface $\lambda(x,\,
+\mathrm{order})$, fit independently per chip, to interpolate absolute
+wavelengths to unfitted orders. This approach proved unreliable:
+with only two or three fitted orders per chip the surface was
+underconstrained, and quadratic extrapolation to edge orders produced
+wavelengths off by factors of several. Fitting a velocity \emph{correction}
+across all chips avoids this because the corrections are small and smooth,
+keeping extrapolation errors bounded.
 
 The precision of the \vipere{} wavelength solution on science data is
 assessed using four complementary metrics (Fig.~\ref{fig:wlprecision}).
