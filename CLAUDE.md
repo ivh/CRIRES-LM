@@ -75,8 +75,21 @@ All hot B/O-type stars with clean continua in L/M band:
 
 ## Number of orders per setting (for vipere -oset)
 - 7 orders/chip: L3377, L3412, L3426, M4266, M4519
-- 6 orders/chip: L3244, L3262, L3302, L3340, M4187, M4318, M4368, M4416
-- 5 orders/chip: M4211 (also has missing CHIP1 order 8 — use -oset 2:16), M4461, M4504
+- 6 orders/chip: L3244, L3262, L3302, L3340, M4187, M4211, M4318, M4368, M4416, M4461, M4504
+- 5 orders/chip: (none currently)
+
+### Spurious edge traces cleaned from _tw.fits
+The pipeline tracing occasionally creates duplicate traces for partial orders at the detector edge (~y>2000). These set `SlitFraction=[-1,-1,-1]` on both traces, preventing extraction of the valid trace too. Cleaned:
+- **M4211**: removed CHIP1 order 8 (y~1983) and CHIP2 order 7 trace 2 (y~2008, was actually order 8 misidentified). Fixed CHIP2 order 7 SlitFraction. Now 6 orders/chip (orders 2-7).
+- **M4461**: removed CHIP1 order 8 trace 2 (y~1959), fixed trace 1 SlitFraction. Now 6 orders/chip.
+- **M4504**: removed order 8 trace 2 on all 3 chips, fixed trace 1 SlitFraction on all 3 chips. Now 6 orders/chip.
+
+### Edge orders still present (not removed)
+Some settings have orders with Upper boundaries slightly past the detector edge. These generally extract fine:
+- M4266/M4318: order 8 Upper >2048 on CHIP2/CHIP3
+- M4368: order 8 Upper >2048 on CHIP3 only
+- M4519: order 9 Upper >2048 on all chips
+- L3244: order 1 Lower negative on CHIP2/CHIP3 (order absent from CHIP1)
 
 ## tellurics/ directory structure
 - `tellurics/{setting}/` — one subdir per wavelength setting (16 settings: L3244-L3426, M4187-M4519)
@@ -289,20 +302,24 @@ ls reduced/*/nodd.sof | sed 's|/nodd.sof||' | while read d; do [ -e "$d/cr2res_o
 
 ### Error handling
 - Empty CHIP extensions (bad esorex output): detected, bad file deleted, skip gracefully
-- Missing orders per chip (e.g. M4211 CHIP1 missing order 8): skipped in plots
+- Missing orders per chip: skipped in plots
 
 ## Wavelength correction script (`wavecorr.py`)
 
 ### Usage
 - `uv run wavecorr.py <reduction_dir>`
 - Reads tellfit sidecar files from tellcorr.py, updates WL columns in _tellcorr.fits
+- Idempotent: reads pipeline wavelengths from the `_tw.fits` in the reduction dir (not from the tellcorr FITS columns), so can be re-run without re-running tellcorr first
 
 ### Method
 - **Fitted orders**: vipere wavelength polynomial applied directly (Angstrom -> nm)
-- **Unfitted orders**: 2D polynomial fit to vipere wavelengths wl(x, order_number) per chip, then evaluated at the unfitted order numbers
-- 2D fit: degree 2 in pixel, degree 2 in order number (9 terms), fitted to 20 sample points per fitted order
-- Each chip fitted independently
-- Diagnostic 3D plot saved as `wavecorr_chip{N}_{A,B}.png` showing surface + data points + order lines (green=fitted, red dashed=interpolated)
+- **Unfitted orders**: linear velocity correction `dv(wavelength)` fitted across all 3 chips, then applied to the pipeline wavelength from the `_tw.fits`
+- Only orders with `prms < 30%` are used for the correction fit (bad vipere fits excluded)
+- All 3 chips pooled into one fit (the chips are at fixed relative positions, so the correction is smooth across the full wavelength range)
+- Always linear (degree 1) — robust against edge extrapolation
+- Sanity cap: corrections exceeding 100 km/s are rejected, order keeps pipeline WL
+- Minimum 3 good fitted orders required; otherwise unfitted orders keep pipeline WL
+- Diagnostic plot saved as `wavecorr_{A,B}.png` showing dv vs wavelength (good orders as dots, excluded as faint x markers, fit line, unfitted order positions as vertical lines)
 
 ### FITS extension access
 - Always use `hdul['CHIP{N}.INT1']` not `hdul[N]` — combined reductions may have extra extensions shifting numeric indices

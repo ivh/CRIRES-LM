@@ -22,7 +22,9 @@ From these measurements:
 
 Before extraction, the trace positions are adjusted per observation to account for instrument flexure: `adjust_traces.py` cross-correlates the spatial profile of each raw frame against the reference trace boundaries to measure the Y-shift (typically 5--10 pixels, up to ~50 in rare cases) and writes a corrected tracing table into each reduction directory.
 
-All 5237 AB pairs and their combined per-template spectra are then reduced with `esorex cr2res_obs_nodding` using these adjusted tracing tables (with slit tilt and updated wavelengths) and the nearest-in-time flat field and blaze function. Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, followed by `wavecorr.py` which updates the wavelength scale: fitted orders get the vipere wavelength polynomial directly, while unfitted orders (no telluric features, CO2-saturated regions) get wavelengths interpolated from a 2D polynomial surface fitted to the vipere solutions per chip.
+The pipeline-provided tracing tables (`*_tw.fits`) have been cleaned of spurious edge traces that the pipeline's tracing algorithm occasionally creates for partial orders at detector boundaries. These duplicate traces poison the `SlitFraction` metadata, preventing extraction of valid orders (affected settings: M4211, M4461, M4504).
+
+All 5237 AB pairs and their combined per-template spectra are then reduced with `esorex cr2res_obs_nodding` using these adjusted tracing tables (with slit tilt and updated wavelengths) and the nearest-in-time flat field and blaze function. Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, followed by `wavecorr.py` which updates the wavelength scale: fitted orders get the vipere wavelength polynomial directly, while unfitted orders (no telluric features, CO2-saturated regions) receive a velocity correction interpolated from a linear fit to the vipere corrections across all three chips.
 
 The reduced and telluric-corrected spectra are browsable and downloadable via a [web app](https://neon.physics.uu.se/crires-lm/).
 
