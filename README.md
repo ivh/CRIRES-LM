@@ -16,6 +16,7 @@ From these measurements:
 
 - **Slit tilt**: fit a linear tilt(wavelength) relation per band, interpolating across the CO2 gap at 4.2--4.5 um where no telluric fit is possible. Written into the `SlitPolyB` column of the tracing tables (`*_tw.fits`).
 - **Wavelength calibration**: vipere wavelength polynomials replace the pipeline solution for 72% of traces; the remainder keep pipeline wavelengths (mostly orders with weak/no telluric features).
+- **Aggregate wavelength refinement**: after all science reductions, the median vipere wavelength from all observations is compared to the tracing table per (setting, chip, order). A linear velocity offset vs wavelength is fit per setting and applied as a multiplicative correction to all polynomial coefficients, removing systematic offsets of 1--8 km/s.
 - **Nod throw**: actual throw measured from spatial profiles (2--3% larger than commanded).
 
 ### Stage 2: Science reduction with telluric correction
@@ -44,8 +45,8 @@ Each observation page shows the combined per-template spectrum (interactive Plot
 ## Repository structure
 
 ```
-*.py                   scripts (fetch, reduce, telluric correct, wavecal, webapp)
-*_tw.fits              tracing/wavelength tables per setting (calibration products)
+*.py                   scripts (fetch, reduce, telluric correct, wavecal, compare, webapp)
+*_tw.fits              tracing/wavelength tables per setting (calibration products, aggregate-corrected)
 cr2res_obs_nodding.rc  esorex recipe config for nodding
 cr2res_cal_flat.rc     esorex recipe config for flats
 flats/                 flat field data: {setting}_{date}/ subdirs with SOFs and output

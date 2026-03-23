@@ -205,6 +205,20 @@ Some settings have orders with Upper boundaries slightly past the detector edge.
 - Typical vipere correction: 1-4 km/s from pipeline
 - Provenance tracked in `tellurics/tw_origin.md`
 
+### Aggregate wavelength correction (`compare_tw_wavelengths.py`)
+- Compares _tw.fits wavelength polynomials against median vipere science solutions from all `reduced/*/tellfit_{A,B}.par.dat` + `tellfit_{A,B}_xcen.json`
+- Converts each observation's vipere polynomial to _tw format, takes median per (setting, chip, order)
+- Fits linear velocity offset `dv = a + b*wl` per setting through vipere-sourced data points (iterative 3-sigma clip)
+- Applies multiplicative correction to all three polynomial coefficients:
+  - `c0_new = c0*(1 - a/c) - (b/c)*c0^2`
+  - `c1_new = c1*(1 - a/c) - (b/c)*2*c0*c1`
+  - `c2_new = c2*(1 - a/c) - (b/c)*(c1^2 + 2*c0*c2)`
+- M4416 CHIP1 orders 7-8 excluded from fit (bad telluric standard data on that chip)
+- Typical corrections: 1-8 km/s, fit rms ~0.3-1.5 km/s per setting
+- Generates per-setting diagnostic plots (`tw_comparison_{setting}.png`) and summary figure (`tw_correction_summary.png`)
+- Modifies _tw.fits in place — not idempotent, use `git checkout -- *_tw.fits` before re-running
+- MAX_ORDER mapping must match what vipere sees in extracted spectra (after edge trace cleanup)
+
 ### _tw.fits tracing table structure
 - Extensions: CHIP1.INT1, CHIP2.INT1, CHIP3.INT1 — one row per spectral order
 - Columns: `All`, `Upper`, `Lower` (trace polynomials: Y as f(X)), `Order`, `TraceNb`, `Wavelength`, `Wavelength_Error`, `SlitPolyA`, `SlitPolyB`, `SlitPolyC`, `SlitFraction`
