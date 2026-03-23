@@ -391,6 +391,42 @@ precision.
   \label{fig:tiltcomp}
 \end{figure}
 
+After all science spectra were processed, we used the aggregate
+\vipere{} wavelength solutions to refine the reference tracing tables
+themselves. For each wavelength setting, we compared the tracing table
+wavelength polynomial to the median science \vipere{} solution per
+detector order, evaluated at pixel~1024 from all observations passing
+the quality filter. The resulting velocity offsets follow a smooth linear
+trend with wavelength within each setting, reaching $-$2 to
+$-$8\,\kms{} in L~band and up to $+$8\,\kms{} in some M-band settings
+(Fig.~\ref{fig:twcorr}).
+We fit a linear relation $\Delta v = a + b\,\lambda$ per setting
+(iterative $3\sigma$ clipping, typical RMS of the fit $\lesssim
+1$\,\kms) and apply it as a multiplicative correction to all three
+wavelength polynomial coefficients. A linear velocity offset produces
+corrections not only to the zero-point~$c_0$ but also to the
+dispersion~$c_1$ and curvature~$c_2$, because $\lambda_\mathrm{new}(x)
+= \lambda(x)\,[1 - \Delta v(\lambda) / c]$ and $\Delta v$ itself
+depends on~$\lambda(x)$.  The corrected tracing tables are provided as
+the reference calibration products; they were not used to re-reduce the
+archive spectra presented here, but serve as improved starting points for
+future reductions of data in these wavelength settings.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/tw_comparison_M4318.png}
+  \caption{Velocity offset between the reference tracing table
+    wavelengths and the median science \vipere{} solution for the M4318
+    setting, shown as a representative example. Each curve segment
+    corresponds to one detector order, coloured by chip (blue: CHIP1,
+    orange: CHIP2, green: CHIP3). Dashed lines mark orders that retained
+    pipeline wavelengths; solid lines have \vipere{} wavelengths from
+    the telluric standard. The red line is the linear fit used to correct
+    the tracing table. The shaded bands show the uncertainty of the
+    median.}
+  \label{fig:twcorr}
+\end{figure}
+
 %--------------------------------------------------------------------
 \section{The archive}
 \label{sec:archive}
