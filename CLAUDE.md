@@ -83,13 +83,13 @@ The pipeline tracing occasionally creates duplicate traces for partial orders at
 - **M4211**: removed CHIP1 order 8 (y~1983) and CHIP2 order 7 trace 2 (y~2008, was actually order 8 misidentified). Fixed CHIP2 order 7 SlitFraction. Now 6 orders/chip (orders 2-7).
 - **M4461**: removed CHIP1 order 8 trace 2 (y~1959), fixed trace 1 SlitFraction. Now 6 orders/chip.
 - **M4504**: removed order 8 trace 2 on all 3 chips, fixed trace 1 SlitFraction on all 3 chips. Now 6 orders/chip.
+- **L3244**: removed order 1 from CHIP2 (Lower=-40) and CHIP3 (Lower=-25); order absent from CHIP1. Now 6 orders/chip (orders 2-7).
 
 ### Edge orders still present (not removed)
 Some settings have orders with Upper boundaries slightly past the detector edge. These generally extract fine:
 - M4266/M4318: order 8 Upper >2048 on CHIP2/CHIP3
 - M4368: order 8 Upper >2048 on CHIP3 only
 - M4519: order 9 Upper >2048 on all chips
-- L3244: order 1 Lower negative on CHIP2/CHIP3 (order absent from CHIP1)
 
 ## tellurics/ directory structure
 - `tellurics/{setting}/` — one subdir per wavelength setting (16 settings: L3244-L3426, M4187-M4519)
