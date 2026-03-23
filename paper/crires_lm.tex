@@ -428,7 +428,15 @@ future reductions of data in these wavelength settings.
 \end{figure}
 
 %--------------------------------------------------------------------
-\section{The archive}
+\section{Caveats}
+\label{sec:caveats}
+
+Not useful for data where spatial resolution along the slit is relevant.
+
+Data taken without metrology has been reduced and the traces adjusted by shifts in the
+
+%--------------------------------------------------------------------
+\section{The data archive}
 \label{sec:archive}
 
 The reduced spectra are served through a web application at
@@ -455,13 +463,14 @@ template views. The full reduction code is available at
 
 Claude Opus 4.6 \citep{claude_opus46} was used extensively in this project
 and it would not have happened without it. Through careful and supervised
-guidance Claude wrote the scripts that
+guidance Claude Code wrote the scripts that carried out the aforementioned steps:
 \begin{itemize}
 \item query the ESO archive for all LM data and build a local sqlite database with meta-information
 \item retrieve the data from the ESO archive
 \item group data by nodding AB pairs and associate the nearest flat-field
 \item generate the SOF with filenames and tags for the cr2res recipes
 \item measure the slit tilt from the telluric stars' A-B difference
+\item find the best shift in Y for the trace polynomials
 \item orchestrate the parallel runs of 10,000 pipeline reductions
 \item carry out the telluric fits with vipere and plot the results
 \item aggregate the telluric fit results from all data to verify the slit tilt
@@ -490,6 +499,11 @@ includes slit tilt and wavelength calibration from telluric standard fits,
 per-observation flexure correction, and forward-model telluric correction.
 The resulting archive is browsable and downloadable at
 \url{https://neon.physics.uu.se/crires-lm/}.
+
+The updated *\_tw.fits files with cleaned up traces, slit tilt and good default
+wavelengths are available from the code repository. They can be used as drop-in
+replacements for other data reductions, and have been offered to ESO in the
+hope that they will ship with the next release of the cr2res pipeline. 
 
 \begin{acknowledgements}
 Based on observations made with ESO Telescopes at the La Silla Paranal Observatory under programme ID(s)
