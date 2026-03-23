@@ -17,6 +17,7 @@ import plotly.graph_objects as go
 from astropy.io import fits
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 BASE = Path(__file__).parent
@@ -43,6 +44,7 @@ async def lifespan(app):
 
 
 app = FastAPI(title="CRIRES+ L/M Browser", lifespan=lifespan)
+app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
 
 
