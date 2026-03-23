@@ -453,9 +453,31 @@ template views. The full reduction code is available at
 \section{Use of AI tools}
 \label{sec:ai}
 
-% TODO: write this section
-Claude Opus 4.6 \citep{claude_opus46} was used ...
+Claude Opus 4.6 \citep{claude_opus46} was used extensively in this project
+and it would not have happened without it. Through careful and supervised
+guidance Claude wrote the scripts that
+\begin{itemize}
+\item query the ESO archive for all LM data and build a local sqlite database with meta-information
+\item retrieve the data from the ESO archive
+\item group data by nodding AB pairs and associate the nearest flat-field
+\item generate the SOF with filenames and tags for the cr2res recipes
+\item measure the slit tilt from the telluric stars' A-B difference
+\item orchestrate the parallel runs of 10,000 pipeline reductions
+\item carry out the telluric fits with vipere and plot the results
+\item aggregate the telluric fit results from all data to verify the slit tilt
+\item analyze wavelength accuracy from aggregate the telluric fits
+\end{itemize}
 
+In addition, the web-application that runs the data archive is entirely 
+AI-generated.
+
+The authors are confident in the methodolocial correctness of the applied
+concepts and when inspecting the code have not found reason to doubt
+the results.
+
+A first draft of this text was also written in collaboration with Claude, often
+as the summary of the analysis session that produced the results.
+The text was then edited and checked for correctness by the authors. (TODO)
 
 %--------------------------------------------------------------------
 \section{Summary}
