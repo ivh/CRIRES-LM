@@ -46,6 +46,8 @@ async def lifespan(app):
 app = FastAPI(title="CRIRES+ L/M Browser", lifespan=lifespan)
 app.mount("/static", StaticFiles(directory=str(BASE / "static")), name="static")
 templates = Jinja2Templates(directory=str(BASE / "templates"))
+templates.env.auto_reload = True
+templates.env.cache = None
 
 
 @app.middleware("http")
@@ -295,11 +297,15 @@ def make_spectrum_plot(dirname, variant=None):
         xaxis_title="Wavelength (nm)",
         yaxis=dict(title="Flux (ADU)", range=yrange, autorange=False),
         height=550,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
+        plot_bgcolor="rgba(0,0,0,0)",
+        paper_bgcolor="rgba(0,0,0,0)",
+        font=dict(color="#888"),
         legend=dict(font=dict(size=10)),
         hovermode="closest",
         margin=dict(t=40, b=40),
+        xaxis=dict(gridcolor="#333", zerolinecolor="#444"),
+        yaxis_gridcolor="#333",
+        yaxis_zerolinecolor="#444",
     )
     fig.update_layout(**layout)
     fig.layout.template = None
@@ -361,7 +367,6 @@ def index(
     variant_qs = f"?variant={variant}" if variant else ""
 
     ctx = {
-        "request": request,
         "observations": observations,
         "objects": objects,
         "settings": settings,
@@ -376,8 +381,8 @@ def index(
     }
 
     if request.headers.get("HX-Request"):
-        return templates.TemplateResponse("obs_table.html", ctx)
-    return templates.TemplateResponse("index.html", ctx)
+        return templates.TemplateResponse(request, "obs_table.html", ctx)
+    return templates.TemplateResponse(request, "index.html", ctx)
 
 
 def _resolve_dirname(dirname):
@@ -425,8 +430,7 @@ def _pair_frames(frames):
 def about(request: Request):
     readme = (BASE / "README.md").read_text()
     html = markdown.markdown(readme, extensions=["fenced_code"])
-    return templates.TemplateResponse("about.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "about.html", {
         "content": html,
     })
 
@@ -440,8 +444,7 @@ def flat_index(request: Request, setting: str = Query(None)):
     if setting:
         flat_dirs = [d for d in flat_dirs if d.startswith(setting)]
     settings = sorted({d.rsplit("_", 1)[0] for d in flat_dirs})
-    return templates.TemplateResponse("flats_index.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "flats_index.html", {
         "flat_dirs": flat_dirs,
         "settings": settings,
         "sel_setting": setting,
@@ -509,8 +512,7 @@ def flat_detail(request: Request, dirname: str):
         if p.suffix == ".fits"
     )
 
-    return templates.TemplateResponse("flat_detail.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "flat_detail.html", {
         "dirname": dirname,
         "setting": setting,
         "date": date,
@@ -616,8 +618,7 @@ def observation(request: Request, dirname: str, variant: str = Query(None)):
     other_variant_qs = f"?variant={other_variant}" if other_variant else ""
     other_variant_label = "with flat" if variant else "without flat"
 
-    return templates.TemplateResponse("observation.html", {
-        "request": request,
+    return templates.TemplateResponse(request, "observation.html", {
         "obs": obs,
         "images": images,
         "downloads": downloads,

@@ -7,7 +7,11 @@
     <script src="{{ base }}/static/htmx.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <style>
-        :root { --bg: #fafafa; --fg: #222; --accent: #2563eb; --border: #ddd; --row-hover: #f0f4ff; }
+        :root { --bg: #fafafa; --fg: #222; --accent: #2563eb; --border: #ddd; --row-hover: #f0f4ff; --surface: #fff; --surface-alt: #f5f5f5; --muted: #666; --border-light: #eee; }
+        @media (prefers-color-scheme: dark) {
+            :root:not([data-theme="light"]) { --bg: #1a1a2e; --fg: #e0e0e0; --accent: #60a5fa; --border: #333; --row-hover: #1e293b; --surface: #16213e; --surface-alt: #1a1a2e; --muted: #999; --border-light: #2a2a3e; }
+        }
+        :root[data-theme="dark"] { --bg: #1a1a2e; --fg: #e0e0e0; --accent: #60a5fa; --border: #333; --row-hover: #1e293b; --surface: #16213e; --surface-alt: #1a1a2e; --muted: #999; --border-light: #2a2a3e; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--fg); line-height: 1.5; padding: 1rem 2rem; }
         h1 { font-size: 1.4rem; margin-bottom: 0.5rem; }
@@ -15,28 +19,24 @@
         a { color: var(--accent); text-decoration: none; }
         a:hover { text-decoration: underline; }
 
-        .filters { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; padding: 0.75rem; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+        .filters { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-bottom: 1rem; padding: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
         .filters label { font-size: 0.8rem; font-weight: 600; display: block; margin-bottom: 2px; }
-        .filters select, .filters input { font-size: 0.85rem; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; }
-        .filters .count { font-size: 0.85rem; color: #666; margin-left: auto; align-self: center; }
+        .filters select, .filters input { font-size: 0.85rem; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface-alt); color: var(--fg); }
+        .filters .count { font-size: 0.85rem; color: var(--muted); margin-left: auto; align-self: center; }
 
-        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-        th { text-align: left; padding: 8px 10px; background: #f5f5f5; border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+        th { text-align: left; padding: 8px 10px; background: var(--surface-alt); border-bottom: 2px solid var(--border); font-weight: 600; white-space: nowrap; }
         th[data-sort] { cursor: pointer; }
-        th[data-sort]::after { content: ' \2195'; color: #ccc; font-size: 0.75em; }
+        th[data-sort]::after { content: ' \2195'; color: var(--muted); font-size: 0.75em; }
         th.sort-asc::after { content: ' \2191'; color: var(--accent); }
         th.sort-desc::after { content: ' \2193'; color: var(--accent); }
-        td { padding: 6px 10px; border-bottom: 1px solid #eee; white-space: nowrap; }
+        td { padding: 6px 10px; border-bottom: 1px solid var(--border-light); white-space: nowrap; }
         tr:hover td { background: var(--row-hover); }
         .mono { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.8rem; }
-        .status { display: inline-block; width: 10px; height: 10px; border-radius: 50%; }
-        .status.green { background: #22c55e; }
-        .status.yellow { background: #eab308; }
-        .status.red { background: #ccc; }
 
-        .meta-grid { display: flex; flex-wrap: wrap; gap: 0.25rem 2rem; margin-bottom: 1rem; padding: 0.75rem; background: #fff; border: 1px solid var(--border); border-radius: 6px; }
+        .meta-grid { display: flex; flex-wrap: wrap; gap: 0.25rem 2rem; margin-bottom: 1rem; padding: 0.75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; }
         .meta-grid > div { white-space: nowrap; }
-        .meta-grid dt { font-weight: 600; font-size: 0.8rem; color: #666; display: inline; }
+        .meta-grid dt { font-weight: 600; font-size: 0.8rem; color: var(--muted); display: inline; }
         .meta-grid dt::after { content: ': '; }
         .meta-grid dd { font-size: 0.9rem; display: inline; }
 
@@ -50,7 +50,7 @@
 
         .frames-table { margin-top: 0.5rem; }
         .frames-table td, .frames-table th { padding: 4px 8px; }
-        .pair-even td { background: #f3f4f6; }
+        .pair-even td { background: var(--surface-alt); }
         .pair-row { cursor: pointer; }
         .pair-row.pair-hover td { background: var(--row-hover); }
         .pair-num { font-weight: 600; color: var(--accent); }
@@ -61,18 +61,42 @@
         .about-content h3 { font-size: 1rem; margin: 1.2rem 0 0.3rem; }
         .about-content p { margin: 0.5rem 0; }
         .about-content ul, .about-content ol { margin: 0.5rem 0 0.5rem 1.5rem; }
-        .about-content code { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.85em; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
-        .about-content pre { background: #f5f5f5; padding: 0.75rem; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; }
+        .about-content code { font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.85em; background: var(--surface-alt); padding: 1px 4px; border-radius: 3px; }
+        .about-content pre { background: var(--surface-alt); padding: 0.75rem; border-radius: 6px; overflow-x: auto; margin: 0.5rem 0; }
         .about-content pre code { background: none; padding: 0; }
         .back { display: inline-block; margin-bottom: 0.75rem; font-size: 0.9rem; }
-        .spec-toggle { font-size: 0.8rem; padding: 2px 10px; border: 1px solid var(--border); border-radius: 4px; background: #fff; cursor: pointer; color: var(--fg); }
+        .spec-toggle { font-size: 0.8rem; padding: 2px 10px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); cursor: pointer; color: var(--fg); }
         .spec-toggle:hover { background: var(--row-hover); }
         .nav-links { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
-        .about-link { font-size: 0.85rem; color: #666; margin-left: auto; }
+        .about-link { font-size: 0.85rem; color: var(--muted); margin-left: auto; }
         .about-link:hover { color: var(--accent); }
+        .theme-toggle { font-size: 0.85rem; padding: 2px 8px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); cursor: pointer; color: var(--muted); position: fixed; bottom: 1rem; right: 1rem; z-index: 100; }
+        .theme-toggle:hover { color: var(--accent); }
     </style>
 </head>
 <body>
     {% block content %}{% endblock %}
+    <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn"></button>
+    <script>
+    (function() {
+        var html = document.documentElement;
+        var saved = localStorage.getItem('theme');
+        if (saved) html.dataset.theme = saved;
+        updateBtn();
+        function updateBtn() {
+            var t = html.dataset.theme;
+            document.getElementById('theme-btn').textContent = t === 'dark' ? 'Light' : t === 'light' ? 'Dark' : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'Light' : 'Dark');
+        }
+        window.toggleTheme = function() {
+            var current = html.dataset.theme;
+            var sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            if (!current) html.dataset.theme = sysDark ? 'light' : 'dark';
+            else if (current === 'dark') html.dataset.theme = 'light';
+            else html.dataset.theme = 'dark';
+            localStorage.setItem('theme', html.dataset.theme);
+            updateBtn();
+        };
+    })();
+    </script>
 </body>
 </html>
