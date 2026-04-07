@@ -14,6 +14,7 @@
 \newcommand{\crires}{CRIRES$^+$}
 \newcommand{\um}{$\mu$m}
 \newcommand{\kms}{km\,s$^{-1}$}
+\newcommand{\viper}{\texttt{viper}}
 \newcommand{\vipere}{\texttt{vip\`ere}}
 \newcommand{\esorex}{\texttt{esorex}}
 \newcommand{\crtwores}{\texttt{cr2res}}
@@ -37,23 +38,41 @@
 % TODOs
 %
 % * why only flats, no bpm, dark, etc
+% * detlin missing
 % * xcorr tried but no avail
 % * choice to neglect in-detector-order tilt
-% * caveats: obs taken for spatial resolution or extenden obj have no use of this
+% * caveats: obs taken for spatial resolution or extenden obj have no use of this, double stars, fixed extr height
 % * random findings, eg no-metrology data not flat-fieldable
 % * at first _tw update, some wl were kept at ppl values bc bad fits, later fixed with median from all obs, that now matches all wl in the trace files nicely.
 
 \abstract{
-We present a uniformly reprocessed archive of all public \crires{} L-band
-(2.8--4.2\,\um) and M-band (4.2--5.5\,\um) science observations obtained
-between September 2021 and March 2025, totalling 11\,131 raw frames
-across 16 wavelength settings. The reprocessing improves upon the standard
-ESO pipeline by incorporating a slit tilt calibration derived from
-telluric standard observations, per-observation flexure correction of the
-spectral traces, and telluric correction using the \vipere{} forward
-modelling tool. The resulting 5649 extracted AB nod-pair spectra, spanning
+The high-resolution near-infrared spectrograph \crires{} at ESO VLT covers the bands
+Y, J, H, K, L, M. The U-Ne and Fabry-Pérot calibration light sources however cover only wavelengths until the K-band,
+leaving the bands L and M without wavelength calibration and without a way to
+measure the incline of the long slit relative to the detector frame.
+This has made CRIRES LM data difficult to use, which is witnessed
+by the low publication fraction of public data, and the fact that LM data
+is not included in the reduced science products in the ESO archive.
+
+To remedy this, we here present a uniformly reprocessed archive of all public \crires{} L-band
+(2.8--4.2\,\um) and M-band (4.4--5.5\,\um) science observations obtained
+since the instrument upgrade (September 2021) until March 2025, totalling 11\,131 raw frames
+across 16 wavelength settings. We make extensive use of the telluric modelling of \viper\ 
+which fits a model to the plethora of atmospheric absorption features that exist around these
+wavelengths. 
+To calibrate the slit tilt, we select observations of telluric standards
+and measure the difference in the \viper\ wavelength solutions between the nodding A and B frames
+that have the target in the lower and upper half of the slit, respectively.
+
+We then updated the static inputs to the ESO data reduction system (DRS) with the slit tilt
+information and reduced the flat-fields and science data with those. Subsequently we derived new
+wavelength scales for each observation from telluric fits on the spectra themselves.
+ The resulting 5649 extracted, calibrated and telluric-corrected AB nod-pair spectra, spanning
 156 unique targets from 68 ESO programmes, are served through an
-interactive web archive.
+interactive web archive at \url{https://www.astro.uu.se/crires-lm}.
+
+In addition we provide the code and DRS input FITS files with the slit tilt and much improved
+default wavelength solutions, for use in custom and future data reductions at \url{https://github.com/ivh/CRIRES-LM}.
 }
 
 \keywords{infrared: general -- techniques: spectroscopic -- atmospheric effects --
@@ -71,7 +90,7 @@ cross-dispersed spectroscopy from 0.95 to 5.3\,\um{} with a spectral
 resolving power of $R \approx 100\,000$, recording cross-dispersed long-slit
 spectra on 
 three HAWAII2RG detectors
-of $2048 \times 2048$ pixels each with 5--7 echelle orders per chip.
+of $2048 \times 2048$ pixels each with 5--9 echelle orders per chip.
 
 While the near-infrared ($YJHK$) modes of \crires{} are well supported by
 the standard \crtwores{} pipeline \citep{cr2res} and included in ESO's
@@ -87,7 +106,7 @@ observations, degrading extraction quality when uncorrected.
 This paper describes a bulk reprocessing of all public \crires{} L/M
 science data that addresses both issues and additionally provides telluric
 correction. The reduced spectra are served through an interactive web
-archive at \url{https://neon.physics.uu.se/crires-lm/}. The reduction
+archive at \url{https://www.astro.uu.se/crires-lm/}. The reduction
 code is publicly available at
 \url{https://github.com/ivh/CRIRES-LM}.
 
@@ -172,13 +191,11 @@ L/M bands, so the observed spectral features are purely telluric. Each
 standard is observed with an AB nod pair along the slit.
 
 We reduce each nod pair with \esorex{} \texttt{cr2res\_obs\_nodding} and
-then fit the extracted A and B spectra independently with \vipere{},
+then fit the extracted A and B spectra independently with \vipere{}\footnote{\url{https://git.astro.lavail.net/alexis/vipere}},
 a fork of the \texttt{viper}\footnote{\url{https://github.com/mzechmeister/viper}}
-tool \citep{viper} adapted for
-CRIRES+\footnote{\url{https://git.astro.lavail.net/alexis/vipere}},
-a forward-modelling tool that simultaneously fits the
+tool \citep{viper} that simultaneously fits the
 telluric absorption, wavelength solution, continuum, and instrumental
-profile. The key output is a wavelength polynomial per detector order and
+profile. The key output for our purpose is the wavelength polynomial per detector order and
 per nod position.
 
 The slit tilt at each pixel is then computed as the wavelength difference
@@ -440,7 +457,7 @@ Data taken without metrology has been reduced and the traces adjusted by shifts 
 \label{sec:archive}
 
 The reduced spectra are served through a web application at
-\url{https://neon.physics.uu.se/crires-lm/}. The front page presents a
+\url{https://www.astro.uu.se/crires-lm/}. The front page presents a
 filterable and sortable table of all observations for which telluric-corrected
 spectra are available, currently 3913 nod pairs. Users can filter by target
 name, wavelength setting, or ESO programme ID.
@@ -498,7 +515,7 @@ covering 156 targets across 16 wavelength settings. The reprocessing
 includes slit tilt and wavelength calibration from telluric standard fits,
 per-observation flexure correction, and forward-model telluric correction.
 The resulting archive is browsable and downloadable at
-\url{https://neon.physics.uu.se/crires-lm/}.
+\url{https://www.astro.uu.se/crires-lm/}.
 
 The updated *\_tw.fits files with cleaned up traces, slit tilt and good default
 wavelengths are available from the code repository. They can be used as drop-in
