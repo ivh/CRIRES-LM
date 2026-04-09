@@ -8,7 +8,9 @@
 \renewcommand*\aa@journalname{arXiv-only}
 \renewcommand*\aa@manuscriptname{}
 \renewcommand*\aa@publishlink{}
-\renewcommand*\aa@textidlineempty{} % TODO: set to arXiv:XXXX.XXXXX after submission
+\renewcommand*\aa@numarticle{}
+\renewcommand*\aa@textidlineempty{arXiv:XXX} % TODO: set to arXiv:XXXX.XXXXX after submission
+\AtBeginDocument{\renewcommand*\aa@pageof{\thepage}}
 \makeatother
 
 \newcommand{\crires}{CRIRES$^+$}
@@ -42,37 +44,39 @@
 % * xcorr tried but no avail
 % * choice to neglect in-detector-order tilt
 % * caveats: obs taken for spatial resolution or extenden obj have no use of this, double stars, fixed extr height
+%       4th degree continuum fit picks up broad spectral features.
 % * random findings, eg no-metrology data not flat-fieldable
 % * at first _tw update, some wl were kept at ppl values bc bad fits, later fixed with median from all obs, that now matches all wl in the trace files nicely.
 
 \abstract{
 The high-resolution near-infrared spectrograph \crires{} at ESO VLT covers the bands
-Y, J, H, K, L, M. The U-Ne and Fabry-Pérot calibration light sources however cover only wavelengths until the K-band,
-leaving the bands L and M without wavelength calibration and without a way to
+Y, J, H, K, L and M. The U-Ne and Fabry-Pérot calibration light sources however only work until the K-band,
+leaving the bands L and M without wavelength calibration, and without a way to
 measure the incline of the long slit relative to the detector frame.
-This has made CRIRES LM data difficult to use, which is witnessed
-by the low publication fraction of public data, and the fact that LM data
+This has made CRIRES L/M data difficult to use, as is witnessed
+both by the low publication fraction of data taken, and the fact that LM data
 is not included in the reduced science products in the ESO archive.
 
 To remedy this, we here present a uniformly reprocessed archive of all public \crires{} L-band
 (2.8--4.2\,\um) and M-band (4.4--5.5\,\um) science observations obtained
 since the instrument upgrade (September 2021) until March 2025, totalling 11\,131 raw frames
-across 16 wavelength settings. We make extensive use of the telluric modelling of \viper\ 
-which fits a model to the plethora of atmospheric absorption features that exist around these
+across 16 wavelength settings. We make extensive use of the telluric modelling tool \viper\ 
+that fits a model to the plethora of atmospheric absorption features that exist around these
 wavelengths. 
 To calibrate the slit tilt, we select observations of telluric standards
 and measure the difference in the \viper\ wavelength solutions between the nodding A and B frames
 that have the target in the lower and upper half of the slit, respectively.
 
-We then updated the static inputs to the ESO data reduction system (DRS) with the slit tilt
-information and reduced the flat-fields and science data with those. Subsequently we derived new
-wavelength scales for each observation from telluric fits on the spectra themselves.
+We then update the static inputs to the ESO data reduction system (DRS) with the slit tilt
+information and reduced the flat-fields and science data with the standard DRS recipes.
+Subsequently we derived new
+wavelength scales for each observation from telluric fits on the spectra themselves, additionally interpolating the solutions for spectra that have no tellurics from the ones that have. 
  The resulting 5649 extracted, calibrated and telluric-corrected AB nod-pair spectra, spanning
 156 unique targets from 68 ESO programmes, are served through an
-interactive web archive at \url{https://www.astro.uu.se/crires-lm}.
+interactive web archive at \url{https://www.astro.uu.se/crires-lm} that offers data downloads and figues for all datasets that allow an initial judgement of the data quality.
 
-In addition we provide the code and DRS input FITS files with the slit tilt and much improved
-default wavelength solutions, for use in custom and future data reductions at \url{https://github.com/ivh/CRIRES-LM}.
+In addition we provide all scripts and code, and the DRS input FITS files with the slit tilt and much improved
+default wavelength solutions, for use in custom and future data reductions at the repository \url{https://github.com/ivh/CRIRES-LM}.
 }
 
 \keywords{infrared: general -- techniques: spectroscopic -- atmospheric effects --
@@ -88,20 +92,23 @@ methods: data analysis -- instrumentation: spectrographs}
 spectrograph at ESO's Very Large Telescope \citep{Dorn2023}. It provides
 cross-dispersed spectroscopy from 0.95 to 5.3\,\um{} with a spectral
 resolving power of $R \approx 100\,000$, recording cross-dispersed long-slit
-spectra on 
-three HAWAII2RG detectors
+spectra on three HAWAII2RG detectors
 of $2048 \times 2048$ pixels each with 5--9 echelle orders per chip.
 
-While the near-infrared ($YJHK$) modes of \crires{} are well supported by
+While the near-infrared ($YJHK$) modes of \crires{} are fully reduced and calibrated by
 the standard \crtwores{} pipeline \citep{cr2res} and included in ESO's
 Phase~3 data releases, the thermal infrared L-band (2.8--4.2\,\um) and
-M-band (4.2--5.5\,\um) settings are explicitly excluded from the Phase~3
-archive. Two instrument-specific issues affect L/M reductions that the
+M-band (4.4--5.5\,\um) settings lack calibration lamps to do the same.
+
+explicitly 
+Two instrument-specific issues affect L/M reductions that the
 standard pipeline does not address: (1) the slit tilt, which is
-wavelength-dependent and significant in the thermal infrared, is not
-calibrated for these bands; and (2) mechanical flexure of the instrument
-shifts the spectral traces on the detector between calibration and science
-observations, degrading extraction quality when uncorrected.
+wavelength-dependent and significant, is not
+calibrated for these bands; and (2) 
+
+As a result, excluded from the Phase~3
+archive. 
+
 
 This paper describes a bulk reprocessing of all public \crires{} L/M
 science data that addresses both issues and additionally provides telluric
@@ -258,8 +265,8 @@ M4519 & V*\,S\,CrA & T\,Tauri & 0\farcs2 \\
 
 
 %--------------------------------------------------------------------
-\subsection{Wavelength calibration}
-\label{sec:wavecal}
+\subsection{Better default wavelengths}
+\label{sec:defaultwave}
 
 The \vipere{} fits to the telluric standards also provide improved
 wavelength solutions. For traces where the fit converged well
@@ -270,18 +277,54 @@ wavelength calibration in the tracing table. This applies to 225 out of
 wavelengths where telluric features are weak or in the CO$_2$ gap, retain
 the pipeline wavelength solution.
 
+Later updated by picking the median of all interpolated solutions.
+
+%--------------------------------------------------------------------
+\subsection{Calibrations, flats are all you need}
+\label{sec:flats}
+
+We intentionally omitted the many of the calibrations that are part of
+the standard reductions and would in principle be av
+
+The flat-fields are however essential for several reasons. Data with good
+SNR ..
+blaze for easier telluric fits
+bpm
+
+The \crires\ team takes deep flat-fields with high NDIT (20, 50 or 100)
+from time to time. We downloaded these sets for all the L/M settings
+and reduced them with \texttt{cr2res\_cal\_flat}, passing the updated
+slit
+
+
+
+
 
 %--------------------------------------------------------------------
 \subsection{Science extraction}
 \label{sec:extraction}
 
-\crires{} exhibits mechanical flexure that shifts the spectral orders on
+\crires{} has a cross-disperser wheel that selects the grating for each band.
+This mechanism is not very repeatable an can leave the spectral orders shifted
+vertically on
 the detector by typically 5--10 pixels between the daytime calibration
 and the nighttime science observation, occasionally reaching up to
-${\sim}50$ pixels. We correct for this by cross-correlating the spatial
-edge profile of each raw science frame against the order boundaries
-defined in the reference tracing table, measuring a global Y-shift that
-is applied to the trace polynomials before extraction.
+${\sim}50$ pixels. The instrument therefore has a metrology routine that 
+measures the positions of known lines and adjusts the wheel to the 
+reference position.
+
+
+Some %dumbass
+observers however prefer to save on overhead time and skip the metrology,
+leaving the traces offset from calibrations.
+We correct for this by searching for the integer Y-shift that
+maximizes the total flux contained within the order boundaries of the
+reference tracing table, evaluated on the spatial profile of each raw
+science frame (median along columns 500--1500). A parabolic fit around
+the maximum provides sub-pixel refinement, and the median shift across
+the three chips is applied to the trace polynomials before extraction.
+
+
 
 The adjusted tracing table, together with the nearest-in-time master flat
 and blaze function from 233 calibration epochs, forms the input to
@@ -501,9 +544,31 @@ The authors are confident in the methodolocial correctness of the applied
 concepts and when inspecting the code have not found reason to doubt
 the results.
 
-A first draft of this text was also written in collaboration with Claude, often
+The first draft of some sections of this paper was also written in collaboration with Claude, often
 as the summary of the analysis session that produced the results.
 The text was then edited and checked for correctness by the authors. (TODO)
+
+%--------------------------------------------------------------------
+\section{Showcase examples}
+\label{sec:examples}
+
+The purpose of this work is not to analyze the improved spectra for scientific results,
+but to enable other researchers with the necessary expertise to easier exploit
+these hitherto neglected observations.
+
+Nevertheless, here are a few examples of what caught our eye when browsing the
+data.
+
+CO 4.7 micron ro-vibrational lines in transition disks.
+\url{https://www.astro.uu.se/crires-lm/obs/MWC_758_M4368_2024-12-31_02310}
+same here, also cool Br-alpha
+\url{https://www.astro.uu.se/crires-lm/obs/V_VW_Cha_M4368_2023-04-28_00032}
+
+Br-alpha in B-supergiant
+\url{https://www.astro.uu.se/crires-lm/obs/bet_Ori_M4368_2024-12-09_02033}
+
+cool emission feature at 3542 (also Br-alpha)
+\url{https://www.astro.uu.se/crires-lm/obs/IRAS_18576+0341_L3340_2022-08-09_04324?variant=noflat}
 
 %--------------------------------------------------------------------
 \section{Summary}
