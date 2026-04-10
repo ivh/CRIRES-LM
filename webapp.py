@@ -325,44 +325,38 @@ def index(
 ):
     conn = get_db()
 
-    objects = [r[0] for r in conn.execute(
-        "SELECT DISTINCT object FROM observations ORDER BY object"
-    )]
-    settings = [r[0] for r in conn.execute(
-        "SELECT DISTINCT ins_wlen_id FROM observations ORDER BY ins_wlen_id"
-    )]
-    prog_ids = [r[0] for r in conn.execute(
-        "SELECT DISTINCT prog_id FROM observations ORDER BY prog_id"
-    )]
-
-    query = "SELECT * FROM observations WHERE 1=1"
-    params: list = []
-    if q:
-        query += " AND (object LIKE ? OR prog_id LIKE ? OR tpl_start LIKE ?)"
-        like = f"%{q}%"
-        params.extend([like, like, like])
-    if object:
-        query += " AND object = ?"
-        params.append(object)
-    if setting:
-        query += " AND ins_wlen_id = ?"
-        params.append(setting)
-    if prog_id:
-        query += " AND prog_id = ?"
-        params.append(prog_id)
-    query += " ORDER BY date_obs DESC"
-
-    rows = conn.execute(query, params).fetchall()
+    all_rows = conn.execute(
+        "SELECT * FROM observations ORDER BY date_obs DESC"
+    ).fetchall()
     conn.close()
 
-    observations = []
-    for row in rows:
+    # filter to observations with tellcorr data
+    all_obs = []
+    for row in all_rows:
         d = dict(row)
         d["dirname"] = _tpl_to_dir.get(d["tpl_start"], "")
         d.update(reduction_status(d["dirname"], variant))
         if not d["tellcorr"]:
             continue
-        observations.append(d)
+        all_obs.append(d)
+
+    # build dropdown options from available observations only
+    objects = sorted({d["object"] for d in all_obs})
+    settings = sorted({d["ins_wlen_id"] for d in all_obs})
+    prog_ids = sorted({d["prog_id"] for d in all_obs})
+
+    # apply user filters
+    observations = all_obs
+    if q:
+        like = q.lower()
+        observations = [d for d in observations if like in d["object"].lower()
+                        or like in d["prog_id"].lower() or like in d["tpl_start"].lower()]
+    if object:
+        observations = [d for d in observations if d["object"] == object]
+    if setting:
+        observations = [d for d in observations if d["ins_wlen_id"] == setting]
+    if prog_id:
+        observations = [d for d in observations if d["prog_id"] == prog_id]
 
     variant_qs = f"?variant={variant}" if variant else ""
 
