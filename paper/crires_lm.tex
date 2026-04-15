@@ -329,9 +329,9 @@ science reduction accordingly.
 Even though the HAWAII2RG detectors are known to have a non-linear
 response starting below 10\,000 ADU ($\approx $ 20\,000 electrons), we do not
 apply the instrument's standard non-linearity calibration, for two reasons. First, since
-\crires\ cannot illuminate its detectors fully and evenly, the calibration is taken
-with a large number of flat-field frames, and still does not reach high SNR, leaving
-a risk to degrade data quality. Second, except for very bright targets,
+\crires\ cannot illuminate its detectors fully and evenly, this calibration is taken
+with a large number of flat-field frames, and still does not reach high SNR everywhere, leaving
+a risk to degrade data quality. Second, except for very bright targets
 the exposure times  in L and M are limited by the high sky background, that 
 gets removed by the subtraction the nodding A and B frames from each other.
 Thus, the exposure level of continuum and the trough of spectral lines usually
@@ -353,7 +353,6 @@ ${\sim}50$ pixels. The instrument therefore has a metrology routine that
 measures the positions of known lines and adjusts the wheel to the 
 reference position.
 
-
 Some %dumbass
 observers however prefer to save on overhead time and skip the metrology,
 leaving the traces offset from calibrations.
@@ -365,18 +364,34 @@ the maximum provides sub-pixel refinement, and the median shift across
 the three chips is applied to the trace polynomials before extraction.
 
 
-
-The adjusted tracing table, together with the nearest-in-time master flat
-and blaze function from 233 calibration epochs, forms the input to
-\esorex{} \texttt{cr2res\_obs\_nodding}, which performs optimal extraction
-of the A and B nod spectra.
+This adjusted tracing table, together with the nearest-in-time master flat
+and blaze function, and the science frames themselves, make up the input to
+\esorex{} \texttt{cr2res\_obs\_nodding}. This recipe applies the flat-field,
+subtracts the A and B frames from each other and optimally extracts the spectra, using the adjusted
+traces and the slit tilt from above.
+It then applies the blaze function and assigns the default wavelengths to
+each spectral bin.
 
 
 %--------------------------------------------------------------------
 \subsection{Telluric correction}
 \label{sec:tellcorr}
 
-Each extracted science spectrum is fitted with \vipere{}, which models
+\viper{} requires pre-computed atmospheric transmission templates for each
+molecule. The existing templates bundled with \viper{} cover the visible
+through K~band. We generate L- and M-band templates from the
+\texttt{molecule\_atlas\_UVB-MIR.fits} included in the \texttt{molecfit}
+v4.4.2 calibration data \citep{molecfit}, which contains per-molecule
+transmission spectra from 0.29 to 30\,$\mu$m computed with LBLRTM
+\citep{LBLRTM} and the \texttt{aer\_v\_3.8} line database for a standard
+Paranal atmosphere at zenith.
+%
+We extract the relevant wavelength ranges
+(2.5--4.2\,$\mu$m for L, 4.2--5.5\,$\mu$m for M) and the dominant
+absorbing species (H$_2$O, CH$_4$, CO$_2$, N$_2$O, CO, O$_3$) into
+separate FITS tables matching the format of the existing \viper{} templates.
+
+Each extracted science spectrum is then fitted with \vipere{}, which models
 the observed spectrum as a continuum polynomial multiplied by the
 convolved atmospheric transmission, accounting for H$_2$O, CO$_2$, CH$_4$,
 CO, O$_2$, and N$_2$O absorption. The telluric transmission model is
@@ -539,6 +554,8 @@ Not useful for data where spatial resolution along the slit is relevant.
 
 Data taken without metrology are reduced and the traces adjusted by shifts in the
 
+non-linearity as per above.
+
 %--------------------------------------------------------------------
 \section{The data archive}
 \label{sec:archive}
@@ -576,6 +593,7 @@ guidance Claude Code writes the scripts that carry out the aforementioned steps:
 \item measure the slit tilt from the telluric stars' A-B difference
 \item find the best shift in Y for the trace polynomials
 \item orchestrate the parallel runs of 10,000 pipeline reductions
+\item install and run \emph{molecfit} to generate the input atmoshpheric model for \viper
 \item carry out the telluric fits with vipere and plot the results
 \item aggregate the telluric fit results from all data to verify the slit tilt
 \item analyze wavelength accuracy from aggregate the telluric fits
