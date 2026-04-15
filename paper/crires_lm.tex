@@ -9,7 +9,7 @@
 \renewcommand*\aa@manuscriptname{}
 \renewcommand*\aa@publishlink{}
 \renewcommand*\aa@numarticle{}
-\renewcommand*\aa@textidlineempty{arXiv:XXX} % TODO: set to arXiv:XXXX.XXXXX after submission
+\renewcommand*\aa@textidlineempty{} 
 \AtBeginDocument{\renewcommand*\aa@pageof{\thepage}}
 \makeatother
 
@@ -37,20 +37,6 @@
 
 \date{March 2026}
 
-% TODOs
-%
-% * why only flats, no bpm, dark, etc
-% * detlin missing
-% * xcorr tried but no avail
-% * choice to neglect in-detector-order tilt
-% * caveats: obs taken for spatial resolution or extenden obj have no use of this, double stars, fixed extr height
-%       4th degree continuum fit picks up broad spectral features.
-% * random findings, eg no-metrology data not flat-fieldable
-% * at first _tw update, some wl were kept at ppl values bc bad fits, later fixed with median from all obs, that now matches all wl in the trace files nicely.
-% * describe tellcorr output fits format.
-% * put uncorrected spectra into tellcorr
-% * rerun with cont-degr=1-2 ?
-
 \abstract{
 The high-resolution near-infrared spectrograph \crires{} at ESO VLT covers the bands
 Y, J, H, K, L and M. The U-Ne and Fabry-Pérot calibration light sources however only work until the K-band,
@@ -72,13 +58,13 @@ that have the target in the lower and upper half of the slit, respectively.
 
 We then update the static inputs to the ESO data reduction system (DRS) with the slit tilt
 information and reduce the flat-fields and science data with the standard DRS recipes.
-Subsequently we derive new
+Subsequently, we derive new
 wavelength scales for each observation from telluric fits on the spectra themselves, additionally interpolating the solutions for spectra that have no tellurics from the ones that have. 
  The resulting 5649 extracted, calibrated and telluric-corrected AB nod-pair spectra, spanning
 156 unique targets from 68 ESO programmes, are served through an
 interactive web archive at \url{https://www.astro.uu.se/crires-lm} that offers data downloads and figures for all datasets that allow an initial judgement of the data quality.
 
-In addition we provide all scripts and code, and the DRS input FITS files with the slit tilt and much improved
+In addition, we provide all scripts and code, and the DRS input FITS files with the slit tilt and much improved
 default wavelength solutions, for use in custom and future data reductions at the repository \url{https://github.com/ivh/CRIRES-LM}.
 }
 
@@ -286,9 +272,12 @@ solution $< 10$\,\kms), we let the \vipere{} polynomial replace old static
 wavelengths where telluric features are weak or in the CO$_2$ gap, retain
 the pipeline wavelength solution until later.
 
+At this stage, we also removed some redundant duplicate traces, and partial ones
+that were cut at the detector edges from the trace table files (\texttt{*\_tw.fits}).
+
 %--------------------------------------------------------------------
 \subsection{Calibrations, flats are all you need}
-\label{sec:flats}
+\label{sec:calibs}
 
 
 \begin{figure}
@@ -323,8 +312,9 @@ download only these sets of flat-fields (not the daily ones) for all the L/M set
 We then reduce them with \texttt{cr2res\_cal\_flat}, passing the updated
 slit tilt information as input. The nearest-in-time set
 of flats we associate to each observation set, and prepare the set-of-files (SOF) for the
-science reduction accordingly.
-
+science reduction accordingly. Each set of flat-fields has its own page 
+at the archive website, and each reduced observation links to the
+page of the flat-field used.
 
 Even though the HAWAII2RG detectors are known to have a non-linear
 response starting below 10\,000 ADU ($\approx $ 20\,000 electrons), we do not
@@ -363,6 +353,11 @@ science frame (median along columns 500--1500). A parabolic fit around
 the maximum provides sub-pixel refinement, and the median shift across
 the three chips is applied to the trace polynomials before extraction.
 
+On rare occasions it happens that the vertical offset between the flat-field
+and the observation is so large, that there is no valid flat-field for the pixels
+that make up one of the A or B nod positions. This data is essentially lost
+and not recoverable. However, we also provide reduction runs \emph{without}
+flat-fielding, which are generally inferior, but potentially useful in these cases.
 
 This adjusted tracing table, together with the nearest-in-time master flat
 and blaze function, and the science frames themselves, make up the input to
@@ -372,6 +367,32 @@ traces and the slit tilt from above.
 It then applies the blaze function and assigns the default wavelengths to
 each spectral bin.
 
+The number of AB pairs per observation varies greatly, and for some sequences the
+time resolution is relevant, for example exoplanet transits. We therefore reduce
+all data twice, once as combined average frames from all raw frames taken
+by the same template, and once as single AB pairs. Both are available from
+the archive website.
+
+
+
+%---------------------------------------------
+
+\begin{figure*}
+  \centering
+  \includegraphics[width=\textwidth]{figs/wavelength_precision.png}
+  \caption{Wavelength precision of the \vipere{} fits to science spectra,
+    assessed via four metrics. \emph{Top left:} absolute repeatability of
+    the wavelength at pixel~1024 per (setting, chip, order) group, with
+    symbol size proportional to the number of measurements.
+    \emph{Top centre:} distribution of per-group RMS for groups with
+    RMS\,$<$\,5\,\kms. \emph{Top right:} A--B difference scatter, the
+    tightest metric (median 249\,m\,s$^{-1}$).
+    \emph{Bottom left and centre:} inter-chip and inter-order gap scatter.
+    \emph{Bottom right:} cumulative distribution of per-group RMS for all
+    four metrics, showing the hierarchy from A--B (tightest) to absolute
+    (broadest).}
+  \label{fig:wlprecision}
+\end{figure*}
 
 %--------------------------------------------------------------------
 \subsection{Telluric correction}
@@ -382,8 +403,8 @@ molecule. The existing templates bundled with \viper{} cover the visible
 through K~band. We generate L- and M-band templates from the
 \texttt{molecule\_atlas\_UVB-MIR.fits} included in the \texttt{molecfit}
 v4.4.2 calibration data \citep{molecfit}, which contains per-molecule
-transmission spectra from 0.29 to 30\,$\mu$m computed with LBLRTM
-\citep{LBLRTM} and the \texttt{aer\_v\_3.8} line database for a standard
+transmission spectra from 0.29 to 30\,$\mu$m 
+and the \texttt{aer\_v\_3.8} line database for a standard
 Paranal atmosphere at zenith.
 %
 We extract the relevant wavelength ranges
@@ -393,8 +414,7 @@ separate FITS tables matching the format of the existing \viper{} templates.
 
 Each extracted science spectrum is then fitted with \vipere{}, which models
 the observed spectrum as a continuum polynomial multiplied by the
-convolved atmospheric transmission, accounting for H$_2$O, CO$_2$, CH$_4$,
-CO, O$_2$, and N$_2$O absorption. The telluric transmission model is
+convolved atmospheric transmission.  The telluric transmission model is
 reconstructed from the fit residuals as
 $T = (\mathrm{observed} - \mathrm{residual}) / C$, where $C$ is the
 fitted continuum. The corrected spectrum is then
@@ -419,7 +439,7 @@ applied to the reference wavelength polynomial from the tracing table.
 A correction exceeding 100\,\kms{} is considered unphysical and the
 order retains the reference wavelength.
 
-An earlier version used a 2D polynomial surface $\lambda(x,\,
+In an earlier attempt, we used a 2D polynomial surface $\lambda(x,\,
 \mathrm{order})$, fit independently per chip, to interpolate absolute
 wavelengths to unfitted orders. This approach proved unreliable:
 with only two or three fitted orders per chip the surface was
@@ -459,22 +479,6 @@ line density for a well-constrained fit; orders near atmospheric
 transmission windows or the CO$_2$ fundamental band show significantly
 larger scatter.
 
-\begin{figure*}
-  \centering
-  \includegraphics[width=\textwidth]{figs/wavelength_precision.png}
-  \caption{Wavelength precision of the \vipere{} fits to science spectra,
-    assessed via four metrics. \emph{Top left:} absolute repeatability of
-    the wavelength at pixel~1024 per (setting, chip, order) group, with
-    symbol size proportional to the number of measurements.
-    \emph{Top centre:} distribution of per-group RMS for groups with
-    RMS\,$<$\,5\,\kms. \emph{Top right:} A--B difference scatter, the
-    tightest metric (median 249\,m\,s$^{-1}$).
-    \emph{Bottom left and centre:} inter-chip and inter-order gap scatter.
-    \emph{Bottom right:} cumulative distribution of per-group RMS for all
-    four metrics, showing the hierarchy from A--B (tightest) to absolute
-    (broadest).}
-  \label{fig:wlprecision}
-\end{figure*}
 
 As an independent validation of the slit tilt calibration, we compare the
 measured A--B wavelength shifts to the predictions from the
@@ -506,9 +510,25 @@ precision.
   \label{fig:tiltcomp}
 \end{figure}
 
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/tw_comparison_M4318.png}
+  \caption{Velocity offset between the reference tracing table
+    wavelengths and the median science \vipere{} solution for the M4318
+    setting, shown as a representative example. Each curve segment
+    corresponds to one detector order, coloured by chip (blue: CHIP1,
+    orange: CHIP2, green: CHIP3). Dashed lines mark orders that retained
+    pipeline wavelengths; solid lines have \vipere{} wavelengths from
+    the telluric standard. The red line is the linear fit used to correct
+    the tracing table. The shaded bands show the uncertainty of the
+    median.}
+  \label{fig:twcorr}
+\end{figure}
+
+
 Once all science spectra are processed, we use the aggregate
 \vipere{} wavelength solutions to refine the reference tracing tables
-themselves. For each wavelength setting, we compare the tracing table
+themselves. For each wavelength setting, we compare the default
 wavelength polynomial to the median science \vipere{} solution per
 detector order, evaluated at pixel~1024 from all observations passing
 the quality filter. The resulting velocity offsets follow a smooth linear
@@ -527,37 +547,39 @@ the reference calibration products; they are not used to re-reduce the
 archive spectra presented here, but serve as improved starting points for
 future reductions of data in these wavelength settings.
 
-\begin{figure}
-  \centering
-  \includegraphics[width=\columnwidth]{figs/tw_comparison_M4318.png}
-  \caption{Velocity offset between the reference tracing table
-    wavelengths and the median science \vipere{} solution for the M4318
-    setting, shown as a representative example. Each curve segment
-    corresponds to one detector order, coloured by chip (blue: CHIP1,
-    orange: CHIP2, green: CHIP3). Dashed lines mark orders that retained
-    pipeline wavelengths; solid lines have \vipere{} wavelengths from
-    the telluric standard. The red line is the linear fit used to correct
-    the tracing table. The shaded bands show the uncertainty of the
-    median.}
-  \label{fig:twcorr}
-\end{figure}
-
-
-TW tables updated by picking the median of all wl solutions, interpolated or not.
-
 
 %--------------------------------------------------------------------
 \section{Caveats}
 \label{sec:caveats}
 
-Not useful for data where spatial resolution along the slit is relevant.
+We believe this data release is a significant improvement over what
+was hitherto available, for the vast majority of the included observations.
+One size does however not fit all, and there are a few caveats to be aware of.
 
-Data taken without metrology are reduced and the traces adjusted by shifts in the
+The reductions carried out here assume there is a single target at the 
+nodding positions A and B, separated by the nod throw. 
+The spectra get extracted there, collapsing
+all light in the extraction window with fixed height into a single spectrum.
+Naturally, this
+is not useful for observations where spatial resolution along the slit is relevant,
+for example extended targets or binary stars with both companions in
+the slit.
 
-non-linearity as per above.
+Spectral features that are both strong and so wide that they dominate
+the spectrum in the detector order that contains them, for example the
+Br-, can throw off
+the continuum fit of \viper\, in the sense that the continuum gets wrongly
+pulled to match part of the line. This is generally quite obvious from the telluric model and the
+residuals, and needs to be remedied by re-fitting the continuum without
+the spectral feature.
+
+As mentioned above (\ref{sec:extraction}),
+ data taken without metrology can be partially cut-off by the flat-field.
+ 
+No non-linearity correction was applied to the spectra, cf.~\ref{sec:calibs}.
 
 %--------------------------------------------------------------------
-\section{The data archive}
+\section{The data archive website and code repository}
 \label{sec:archive}
 
 The reduced spectra are served through a web application at
@@ -567,26 +589,52 @@ spectra are available, currently 3913 nod pairs. Users can filter by target
 name, wavelength setting, or ESO programme ID.
 
 Each observation page shows an interactive spectrum plot (using Plotly)
-displaying the telluric-corrected spectrum, the fitted telluric model, and
-the continuum, alongside diagnostic plots of the extraction and telluric
-fit quality. FITS files containing the corrected spectra are available for
-download; the output columns per spectral order include the corrected
-spectrum, error, wavelength, telluric transmission, and fitted continuum.
+displaying the spectrum and the telluric model. Alongside there are
+several static plots that allow a quick first assessment of the data:
+\begin{itemize}
+\item The $|A-B|$ image for the 3 detectors, with the extraction window indicated as black/white dashed lines.
+\item Spectrum and telluric model for each order, plus residual.
+\item Wavelength correction, that is the velocity offset of each detector-order from the default wavelength solution. The black line, if present, indicates the fit to the good solutions to extrapolate to the indicated orders that did not get good telluric fits on the data.
+\end{itemize}
 
-Individual AB pair reductions are accessible alongside the combined
-template views. The full reduction code is available at
+
+FITS files are availabel for download, containing the corrected spectra;
+ the output columns per spectral order include the corrected
+spectrum, error, wavelength, telluric transmission, and fitted continuum.
+All information needed to reconstruct the
+original spectrum is present: the \texttt{SPEC} column contains the telluric-corrected
+spectrum (the observed spectrum divided by the telluric model), while the
+fitted telluric transmission and continuum are stored in separate
+\texttt{TELLUR} and \texttt{CONT} columns. The original uncorrected spectrum
+can thus be recovered as $\texttt{SPEC} \times \texttt{TELLUR}$, and the full
+\viper\ forward model as $\texttt{CONT} \times \texttt{TELLUR}$.
+
+Observation pages also link to the page of the flat-field that was used for the
+reduction, which shows the normalized flat-field, the blaze functions and meta-data.
+
+Lastly, a table lists all raw frames that went into the data presented at the current page.
+Clicking on an individual AB pair leads to the reduction page for that specific AB pair alone.
+
+The full reduction code, scripts, static input data, and the webapp is available from 
+the repository at 
 \url{https://github.com/ivh/CRIRES-LM}.
+
+Also in the repository, there are the updated trace table files
+(\texttt{*\_tw.fits}) with cleaned up traces, slit tilt and good default
+wavelengths. These can be used as drop-in
+replacements for other data reductions, and are offered to ESO in the
+hope that they will ship with the next release of the cr2res pipeline. 
 
 
 %--------------------------------------------------------------------
 \section{Use of AI tools}
 \label{sec:ai}
 
-Claude Opus 4.6 \citep{claude_opus46} is used extensively in this project
-and it would not be possible without it. Through careful and supervised
-guidance Claude Code writes the scripts that carry out the aforementioned steps:
+Claude Opus 4.6 \citep{claude_opus46} has been used extensively in this project
+and it would not have been possible without it. Through careful and supervised
+guidance, Claude Code wrote and executed the scripts that carry out the aforementioned steps:
 \begin{itemize}
-\item query the ESO archive for all LM data and build a local sqlite database with meta-information
+\item query the ESO archive for all LM data and build a local SQLite database with meta-information
 \item retrieve the data from the ESO archive
 \item group data by nodding AB pairs and associate the nearest flat-field
 \item generate the SOF with filenames and tags for the cr2res recipes
@@ -608,7 +656,7 @@ the results.
 
 The first draft of some sections of this paper was also written in collaboration with Claude, often
 as the summary of the analysis session that produced the results.
-The text was then edited and checked for correctness by the authors. (TODO)
+The text was then edited and checked for correctness by the authors.
 
 %--------------------------------------------------------------------
 \section{Showcase examples}
@@ -618,11 +666,12 @@ The purpose of this work is not to analyze the improved spectra for scientific r
 but to enable other researchers with the necessary expertise to easier exploit
 these hitherto neglected observations.
 
-Nevertheless, here are a few examples of what catches our eye when browsing the
+Nevertheless, here are a few examples of what cought our eye when browsing the
 data.
 
 CO 4.7 micron ro-vibrational lines in transition disks.
 \url{https://www.astro.uu.se/crires-lm/obs/MWC_758_M4368_2024-12-31_02310}
+
 same here, also cool Br-alpha
 \url{https://www.astro.uu.se/crires-lm/obs/V_VW_Cha_M4368_2023-04-28_00032}
 \url{https://www.astro.uu.se/crires-lm/obs/V_GQ_Lup_M4368_2024-03-16_09003}
@@ -646,22 +695,18 @@ CO in red supergiant
 \section{Summary}
 \label{sec:summary}
 
-We reprocess all 11\,131 public \crires{} L- and M-band science
+We reprocessed all 11\,131 public \crires{} L- and M-band science
 frames from the ESO archive into 5649 telluric-corrected nod-pair spectra
 covering 156 targets across 16 wavelength settings. The reprocessing
 includes slit tilt and wavelength calibration from telluric standard fits,
-per-observation flexure correction, and forward-model telluric correction.
+and per-observation forward-model telluric and wavelength correction.
 The resulting archive is browsable and downloadable at
 \url{https://www.astro.uu.se/crires-lm/}.
 
-The updated *\_tw.fits files with cleaned up traces, slit tilt and good default
-wavelengths are available from the code repository. They can be used as drop-in
-replacements for other data reductions, and are offered to ESO in the
-hope that they will ship with the next release of the cr2res pipeline. 
 
 \begin{acknowledgements}
 We thank N.~Piskunov for early feedback on this project and the draft text; and for
-his leading role in the \crires\ project and its data reduction pipeline.
+his long-standing role in the \crires\ project and its data reduction pipeline.
 
 Based on observations made with ESO Telescopes at the La Silla Paranal Observatory under programme ID(s)
 60.A-9801(B),
