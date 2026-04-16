@@ -430,11 +430,11 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
 
             if ok_a.any():
                 norm_a = np.full_like(spec_a, np.nan)
-                norm_a[ok_a] = spec_a[ok_a] / cont_a[ok_a]
+                norm_a[ok_a] = spec_a[ok_a] / model_a[ok_a]
                 ax2.plot(wl_a, norm_a, color='C0', lw=0.4, alpha=0.8)
             if ok_b.any():
                 norm_b = np.full_like(spec_b, np.nan)
-                norm_b[ok_b] = spec_b[ok_b] / cont_b[ok_b]
+                norm_b[ok_b] = spec_b[ok_b] / model_b[ok_b]
                 ax2.plot(wl_b, norm_b, color='C1', lw=0.4, alpha=0.8)
 
         ax2.axhline(1, color='k', lw=0.5, alpha=0.5)
