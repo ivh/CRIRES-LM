@@ -429,15 +429,15 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
                 ax1.plot(wl_b, model_b, color='k', lw=0.7, alpha=0.6)
 
             if ok_a.any():
-                res_a = np.full_like(spec_a, np.nan)
-                res_a[ok_a] = spec_a[ok_a] - model_a[ok_a]
-                ax2.plot(wl_a, res_a, color='C0', lw=0.4, alpha=0.8)
+                norm_a = np.full_like(spec_a, np.nan)
+                norm_a[ok_a] = spec_a[ok_a] / cont_a[ok_a]
+                ax2.plot(wl_a, norm_a, color='C0', lw=0.4, alpha=0.8)
             if ok_b.any():
-                res_b = np.full_like(spec_b, np.nan)
-                res_b[ok_b] = spec_b[ok_b] - model_b[ok_b]
-                ax2.plot(wl_b, res_b, color='C1', lw=0.4, alpha=0.8)
+                norm_b = np.full_like(spec_b, np.nan)
+                norm_b[ok_b] = spec_b[ok_b] / cont_b[ok_b]
+                ax2.plot(wl_b, norm_b, color='C1', lw=0.4, alpha=0.8)
 
-        ax2.axhline(0, color='k', lw=0.5, alpha=0.5)
+        ax2.axhline(1, color='k', lw=0.5, alpha=0.5)
 
         ax1.plot([], [], color='C0', lw=1, label='A')
         ax1.plot([], [], color='C1', lw=1, label='B')
@@ -445,7 +445,7 @@ def make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b):
         ax1.legend(loc='upper right', fontsize=8)
 
         ax1.set_ylabel('flux [ADU]')
-        ax2.set_ylabel('residual')
+        ax2.set_ylabel('normalized')
         ax2.set_xlabel('wavelength [nm]')
         ax1.set_title(f'{dirname}  order {odrs:02d}', fontsize=10)
 
@@ -501,14 +501,32 @@ def process_dir(dir_path, oset=None):
     make_plots(dir_path, hdul_orig_a, hdul_tc_a, hdul_orig_b, hdul_tc_b)
 
 
+def replot(dir_path):
+    dir_path = Path(dir_path).resolve()
+    ext_a = dir_path / 'cr2res_obs_nodding_extractedA.fits'
+    ext_b = dir_path / 'cr2res_obs_nodding_extractedB.fits'
+    tc_a = dir_path / 'cr2res_obs_nodding_extractedA_tellcorr.fits'
+    tc_b = dir_path / 'cr2res_obs_nodding_extractedB_tellcorr.fits'
+    for f in [ext_a, ext_b, tc_a, tc_b]:
+        if not f.exists():
+            raise FileNotFoundError(f"Missing {f}")
+    make_plots(dir_path, fits.open(ext_a), fits.open(tc_a),
+               fits.open(ext_b), fits.open(tc_b))
+
+
 def main():
     parser = argparse.ArgumentParser(
         description='Telluric-correct CRIRES+ extracted spectra using vipere')
     parser.add_argument('dir', help='Reduction directory containing '
                         'extractedA.fits and extractedB.fits')
     parser.add_argument('--oset', help='Override vipere -oset range (e.g. "1:15")')
+    parser.add_argument('--plot-only', action='store_true',
+                        help='Re-generate plots from existing _tellcorr.fits')
     args = parser.parse_args()
-    process_dir(args.dir, oset=args.oset)
+    if args.plot_only:
+        replot(args.dir)
+    else:
+        process_dir(args.dir, oset=args.oset)
 
 
 if __name__ == '__main__':
