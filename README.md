@@ -1,6 +1,6 @@
 # CRIRES-LM
 
-Bulk reduction of all public CRIRES+ L-band (2.8--4.2 um) and M-band (4.2--5.5 um) science data from the ESO archive (2021-01 to 2025-02), with improved slit tilt calibration and per-observation telluric correction using [vipere](https://git.astro.lavail.net/alexis/vipere) (a fork of [viper](https://github.com/mzechmeister/viper)).
+Bulk reduction of all public CRIRES+ L-band (2.8--4.2 um) and M-band (4.4--5.5 um) science data from the ESO archive (September 2021 through March 2025), with improved slit tilt calibration and per-observation telluric correction using [vipere](https://git.astro.lavail.net/alexis/vipere) (a fork of [viper](https://github.com/mzechmeister/viper)).
 
 ## Approach
 
@@ -25,9 +25,11 @@ Before extraction, the trace positions are adjusted per observation to account f
 
 The pipeline-provided tracing tables (`*_tw.fits`) have been cleaned of spurious edge traces that the pipeline's tracing algorithm occasionally creates for partial orders at detector boundaries. These duplicate traces poison the `SlitFraction` metadata, preventing extraction of valid orders (affected settings: M4211, M4461, M4504).
 
-All 5237 AB pairs and their combined per-template spectra are then reduced with `esorex cr2res_obs_nodding` using these adjusted tracing tables (with slit tilt and updated wavelengths) and the nearest-in-time flat field and blaze function. Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, followed by `wavecorr.py` which updates the wavelength scale: fitted orders get the vipere wavelength polynomial directly, while unfitted orders (no telluric features, CO2-saturated regions) receive a velocity correction interpolated from a linear fit to the vipere corrections across all three chips.
+All 5649 AB pairs are then reduced with `esorex cr2res_obs_nodding` using these adjusted tracing tables (with slit tilt and updated wavelengths) and the nearest-in-time flat field and blaze function. Each observation is reduced twice: once as a combined average of all frames from the same template sequence, and once as individual AB pairs. In addition, reductions without flat-fielding are provided as a fallback for cases where the vertical offset between flat and science is too large for one of the nod positions.
 
-The reduced and telluric-corrected spectra are browsable and downloadable via a [web app](https://neon.physics.uu.se/crires-lm/).
+Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, followed by `wavecorr.py` which updates the wavelength scale: fitted orders get the vipere wavelength polynomial directly, while unfitted orders (no telluric features, CO2-saturated regions) receive a velocity correction interpolated from a linear fit to the vipere corrections across all three chips.
+
+The reduced and telluric-corrected spectra are browsable and downloadable via a [web app](https://www.astro.uu.se/crires-lm/).
 
 ## Web app
 
@@ -38,7 +40,7 @@ Each observation page shows the combined per-template spectrum (interactive Plot
 ## Data scale
 
 - 16 wavelength settings (L3244--L3426, M4187--M4519), 5--7 echelle orders per chip, 3 chips
-- 11,135 raw science frames from the ESO archive, forming 5237 AB nod pairs across 412 observing sequences
+- 11,131 raw science frames from the ESO archive, forming 5649 AB nod pairs across 412 observing sequences
 - 233 flat field epochs across 16 settings, each matched to the nearest-in-time science observation
 - Combined per-template spectra for all sequences
 
