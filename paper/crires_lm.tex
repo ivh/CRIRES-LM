@@ -10,7 +10,7 @@
 \renewcommand*\aa@manuscriptname{}
 \renewcommand*\aa@publishlink{}
 \renewcommand*\aa@numarticle{}
-\renewcommand*\aa@textidlineempty{} 
+\renewcommand*\aa@textidlineempty{} % TODO put arXiv ID here for v2 .
 \AtBeginDocument{\renewcommand*\aa@pageof{\thepage}}
 \makeatother
 
@@ -627,6 +627,12 @@ Also in the repository, there are the updated trace table files
 wavelengths. These can be used as drop-in
 replacements for other data reductions, and are offered to ESO in the
 hope that they will ship with the next release of the cr2res pipeline. 
+
+Part of the motivation for making this an arXiv-only paper is to allow for
+easy future updates, both in terms of adding data as more becomes 
+public, and in terms of code and methods for when further improvements
+are found. The repository has a \emph{git tag} matching the arXiv-version of
+this paper, and we will add a change-log here for versions after this initial.
 
 
 %--------------------------------------------------------------------
