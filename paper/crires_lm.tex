@@ -61,7 +61,7 @@ We then update the static inputs to the ESO data reduction system (DRS) with the
 information and reduce the flat-fields and science data with the standard DRS recipes.
 Subsequently, we derive new wavelength scales for each observation from telluric fits on the spectra 
 themselves, additionally interpolating the solutions for spectra that have no tellurics from the ones that have. 
-The resulting 5649 extracted, calibrated and telluric-corrected AB nod-pair spectra, spanning
+The resulting 5649 extracted, calibrated and telluric-fitted AB nod-pair spectra, spanning
 156 unique targets from 68 ESO programmes, are served through an
 interactive web archive at \url{https://www.astro.uu.se/crires-lm} that offers data downloads and figures for 
 all datasets that allow an initial judgement of the data quality.
@@ -309,7 +309,7 @@ flat-fielding.
 
 In addition, we pass the blaze function that \texttt{cr2res\_cal\_flat} produces
 on to the science recipe. This does not fully normalize the continuum but
-generally straightens it enough to make it easier for \viper\ to do its fit. Lastly,
+generally straightens it enough to make it easier for \vipere\ to do its fit. Lastly,
 outliers in the flat-field, with normalized sensitivity below 0.8 or above 1.2, get flagged
 as bad, thus providing the bad pixel map (BPM) for the science reduction.
 
@@ -406,8 +406,19 @@ the archive website.
 \subsection{Telluric correction}
 \label{sec:tellcorr}
 
-\viper{} requires pre-computed atmospheric transmission templates for each
-molecule. The existing templates bundled with \viper{} cover the visible
+We emphasise that \vipere{} is used here primarily as a wavelength-calibration
+tool: the forward-model fit pins the wavelength scale to the forest of
+atmospheric lines in each order, which is how we recover the L/M wavelength
+solution in the absence of usual wavelength calibration frames: Uranium-Neon and Fabry-Perot. 
+The byproduct telluric model is usable for initial inspection and works acceptably on our data 
+(see e.g Sect.~\Ref{sec:examples}, but it is not
+intended as a science-grade correction. Users with demanding
+telluric-cancellation needs should run their own tailored fits
+(e.g.\ \texttt{molecfit}) against the uncorrected spectrum, which is always
+recoverable as $\texttt{SPEC} \times \texttt{TELLUR}$.
+
+\vipere{} requires pre-computed atmospheric transmission templates for each
+molecule. The existing templates bundled with \vipere{} cover the visible
 through K~band. We generate L- and M-band templates from the
 \texttt{molecule\_atlas\_UVB-MIR.fits} included in the \texttt{molecfit}
 v4.4.2 calibration data \citep{molecfit}, which contains per-molecule
@@ -418,7 +429,7 @@ Paranal atmosphere at zenith.
 We extract the relevant wavelength ranges
 (2.5--4.2\,$\mu$m for L, 4.2--5.5\,$\mu$m for M) and the dominant
 absorbing species (H$_2$O, CH$_4$, CO$_2$, N$_2$O, CO, O$_3$) into
-separate FITS tables matching the format of the existing \viper{} templates.
+separate FITS tables matching the format of the existing \vipere{} templates.
 
 Each extracted science spectrum is then fitted with \vipere{}, which models
 the observed spectrum as a continuum polynomial multiplied by the
