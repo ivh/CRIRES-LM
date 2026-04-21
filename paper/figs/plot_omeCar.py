@@ -44,7 +44,7 @@ for ax, chip in zip(axes, CHIPS):
             va='top', ha='left', fontsize=9)
     ax.tick_params(direction='in', top=True, right=True)
 
-axes[0].set_title(r'$\omega$ Car — setting L3262 — order 03 — Hu 18$\to$6')
+axes[0].set_title(r'$\omega$ Car — setting L3262 — order 03')
 axes[0].legend(loc='lower left', framealpha=0, fontsize=8)
 axes[-1].set_xlabel(r'Wavelength [$\mu$m]')
 

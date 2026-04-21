@@ -33,8 +33,6 @@ for ax, chip in zip(axes, CHIPS):
     ax.plot(w / 1000, corrected * scale + shift, color='C0', lw=0.5, alpha=0.8,
             label=f'{shift} + obs / tell')
 
-    ax.axvline(4.05226, color='grey', lw=0.5, ls=':')  # Brα
-
     wmin, wmax = np.nanmin(w) / 1000, np.nanmax(w) / 1000
     ax.set_xlim(wmin, wmax)
     ax.set_ylim(-100, ytop)
@@ -44,7 +42,7 @@ for ax, chip in zip(axes, CHIPS):
             va='top', ha='left', fontsize=9)
     ax.tick_params(direction='in', top=True, right=True)
 
-axes[0].set_title(r'GQ Lup — setting M4368 — order 06 — Br$\alpha$ / winds')
+axes[0].set_title(r'GQ Lup — setting M4368 — order 06 — Br$\alpha$')
 axes[0].legend(loc='lower left', framealpha=0, fontsize=8)
 axes[-1].set_xlabel(r'Wavelength [$\mu$m]')
 
