@@ -61,7 +61,7 @@ We then update the static inputs to the ESO data reduction system (DRS) with the
 information and reduce the flat-fields and science data with the standard DRS recipes.
 Subsequently, we derive new wavelength scales for each observation from telluric fits on the spectra 
 themselves, additionally interpolating the solutions for spectra that have no tellurics from the ones that have. 
-The resulting 5649 extracted, calibrated and telluric-corrected AB nod-pair spectra, spanning
+The resulting 5649 extracted, calibrated and telluric-fitted AB nod-pair spectra, spanning
 156 unique targets from 68 ESO programmes, are served through an
 interactive web archive at \url{https://www.astro.uu.se/crires-lm} that offers data downloads and figures for 
 all datasets that allow an initial judgement of the data quality.
@@ -309,7 +309,7 @@ flat-fielding.
 
 In addition, we pass the blaze function that \texttt{cr2res\_cal\_flat} produces
 on to the science recipe. This does not fully normalize the continuum but
-generally straightens it enough to make it easier for \viper\ to do its fit. Lastly,
+generally straightens it enough to make it easier for \vipere\ to do its fit. Lastly,
 outliers in the flat-field, with normalized sensitivity below 0.8 or above 1.2, get flagged
 as bad, thus providing the bad pixel map (BPM) for the science reduction.
 
@@ -406,8 +406,19 @@ the archive website.
 \subsection{Telluric correction}
 \label{sec:tellcorr}
 
-\viper{} requires pre-computed atmospheric transmission templates for each
-molecule. The existing templates bundled with \viper{} cover the visible
+We emphasise that \vipere{} is used here primarily as a wavelength-calibration
+tool: the forward-model fit pins the wavelength scale to the forest of
+atmospheric lines in each order, which is how we recover the L/M wavelength
+solution in the absence of usual wavelength calibration frames: Uranium-Neon and Fabry-Perot. 
+The byproduct telluric model is usable for initial inspection and works acceptably on our data 
+(see e.g Sect.~\Ref{sec:examples}, but it is not
+intended as a science-grade correction. Users with demanding
+telluric-cancellation needs should run their own tailored fits
+(e.g.\ \texttt{molecfit}) against the uncorrected spectrum, which is always
+recoverable as $\texttt{SPEC} \times \texttt{TELLUR}$.
+
+\vipere{} requires pre-computed atmospheric transmission templates for each
+molecule. The existing templates bundled with \vipere{} cover the visible
 through K~band. We generate L- and M-band templates from the
 \texttt{molecule\_atlas\_UVB-MIR.fits} included in the \texttt{molecfit}
 v4.4.2 calibration data \citep{molecfit}, which contains per-molecule
@@ -418,7 +429,7 @@ Paranal atmosphere at zenith.
 We extract the relevant wavelength ranges
 (2.5--4.2\,$\mu$m for L, 4.2--5.5\,$\mu$m for M) and the dominant
 absorbing species (H$_2$O, CH$_4$, CO$_2$, N$_2$O, CO, O$_3$) into
-separate FITS tables matching the format of the existing \viper{} templates.
+separate FITS tables matching the format of the existing \vipere{} templates.
 
 Each extracted science spectrum is then fitted with \vipere{}, which models
 the observed spectrum as a continuum polynomial multiplied by the
@@ -686,15 +697,25 @@ what caught our eye when browsing the data.
 
 A striking feature in the M band is the $^{12}$CO $v=1\!-\!0$
 fundamental ro-vibrational band near 4.7\,\um{}, which falls in the CRIRES + M4368
-setting. In the star MWC~758, the CO is seen in emission on top of the deep 
-telluric forest (Fig.~\ref{fig:mwc758_CO}). Similar CO emission is visible in 
-the young T Tauri stars VW~Cha and GQ~Lup, which additionally show 
-Br$\alpha$ at 4.052~\um{} as an accretion tracer from the magnetospheric 
-funnel flow. The same Br$\alpha$ line is detected in emission in the 
-B8 supergiant $\beta$\,Ori (Rigel).
+setting. In the star MWC~758, the CO is seen in emission on top of the deep
+telluric forest\footnote{\url{https://www.astro.uu.se/crires-lm/obs/MWC_758_M4368_2024-12-31_02310}} 
+(Fig.~\ref{fig:mwc758_CO}). Similar CO emission is visible in
+the young T Tauri stars 
+VW~Cha\footnote{\url{https://www.astro.uu.se/crires-lm/obs/V_VW_Cha_M4368_2023-04-28_00032}} 
+(Fig.~\ref{fig:vwcha_CO}) 
+and GQ~Lup\footnote{\url{https://www.astro.uu.se/crires-lm/obs/V_GQ_Lup_M4368_2024-03-16_09003}}
+(Fig.~\ref{fig:gqlup_CO}). GQ~Lup additionally show Br$\alpha$ at
+4.052~\um{} as a tracer of magnetospheric accretion \citep[e.g][]{komarova2020}
+as shown in Fig.~\ref{fig:gqlup_winds}.
+The same Br$\alpha$ line is detected in strong emission in the supergiant
+$\beta$\,Ori\footnote{\url{https://www.astro.uu.se/crires-lm/obs/bet_Ori_M4368_2024-12-09_02033}} 
+(Rigel, Fig.~\ref{fig:betOri_Bra}).
 
-All of these spectra can be browsed and downloaded from the project website;
-a non-exhaustive list of entry points:
+The L-band also offers access to the Humphreys series, a forest of transitions between
+3.3 and 4.0\,\um{} \citep[e.g][]{lenorzer2002}. Fig.~\ref{fig:omeCar_Hu18} shows one such line 
+in emission toward the star $\omega$\,Car\footnote{\url{https://www.astro.uu.se/crires-lm/obs/ome_Car_L3262_2023-12-24_07335}}. 
+
+All of these spectra can be browsed and downloaded from the project website.
 
 \begin{figure}
   \centering
@@ -726,23 +747,31 @@ a non-exhaustive list of entry points:
   \label{fig:gqlup_CO}
 \end{figure}
 
-\begin{itemize}
-\item CO 4.7 micron ro-vibrational lines in transition disks.
-\url{https://www.astro.uu.se/crires-lm/obs/MWC_758_M4368_2024-12-31_02310}
-\item same here, also Br$\alpha$
-\url{https://www.astro.uu.se/crires-lm/obs/V_VW_Cha_M4368_2023-04-28_00032}
-\url{https://www.astro.uu.se/crires-lm/obs/V_GQ_Lup_M4368_2024-03-16_09003}
-\item Br$\alpha$ in B-supergiant
-\url{https://www.astro.uu.se/crires-lm/obs/bet_Ori_M4368_2024-12-09_02033}
-\item cool emission feature at 3542 (also Br$\alpha$)
-\url{https://www.astro.uu.se/crires-lm/obs/IRAS_18576+0341_L3340_2022-08-09_04324?variant=noflat}
-\item winds? order 6 in 
-\url{https://www.astro.uu.se/crires-lm/obs/V_GQ_Lup_M4368_2024-03-16_09003}
-\item what's that at 3690? in
-\url{https://www.astro.uu.se/crires-lm/obs/ome_Car_L3262_2023-12-24_07335}
-\item CO in red supergiant
-\url{https://www.astro.uu.se/crires-lm/obs/WRAY_15-1676_M4318_2021-09-15_23331}
-\end{itemize}
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/gqlup_winds.pdf}
+  \caption{Br$\alpha$ at 4.052\,\um{} in GQ\,Lup, in
+    order 06 of the same M4368 observation as Fig.~\ref{fig:gqlup_CO}.}
+  \label{fig:gqlup_winds}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/betOri_Bra.pdf}
+  \caption{Br$\alpha$ at 4.052\,\um{} in strong emission
+    in the spectrum of $\beta$\,Ori (Rigel)}
+  \label{fig:betOri_Bra}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/omeCar_Hu18.pdf}
+  \caption{A Humphreys recombination line at
+    3.693\,\um{} in emission in the spectrum of
+    $\omega$\,Car.}
+  \label{fig:omeCar_Hu18}
+\end{figure}
+
 %--------------------------------------------------------------------
 \section{Summary}
 \label{sec:summary}
