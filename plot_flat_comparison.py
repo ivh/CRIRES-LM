@@ -18,12 +18,12 @@ offset_noflat = 0.7
 
 for chip in [1, 2, 3]:
     ext = f"CHIP{chip}.INT1"
-    with fits.open(f"{dir_flat}/cr2res_obs_nodding_extractedA_tellcorr.fits") as h:
+    with fits.open(f"{dir_flat}/{dir_flat.split('/')[-1]}_tellcorrA.fits") as h:
         spec_flat = h[ext].data["07_01_SPEC"]
         wl = h[ext].data["07_01_WL"]
         tellur = h[ext].data["07_01_TELLUR"]
         cont = h[ext].data["07_01_CONT"]
-    with fits.open(f"{dir_noflat}/cr2res_obs_nodding_extractedA_tellcorr.fits") as h:
+    with fits.open(f"{dir_noflat}/{dir_noflat.split('/')[-1]}_tellcorrA.fits") as h:
         spec_nf = h[ext].data["07_01_SPEC"]
         tellur_nf = h[ext].data["07_01_TELLUR"]
         cont_nf = h[ext].data["07_01_CONT"]

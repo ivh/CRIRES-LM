@@ -125,7 +125,7 @@ def reduction_status(dirname, variant=None):
     return {
         "exists": True,
         "extracted": (dp / "cr2res_obs_nodding_extractedA.fits").exists(),
-        "tellcorr": (dp / "cr2res_obs_nodding_extractedA_tellcorr.fits").exists(),
+        "tellcorr": (dp / f"{dp.name}_tellcorrA.fits").exists(),
         "wavecorr": bool(list(dp.glob("wavecorr*.png"))),
     }
 
@@ -133,7 +133,7 @@ def reduction_status(dirname, variant=None):
 def read_spectra(dirname, nod="A", variant=None):
     """Read spectral data from tellcorr FITS only. Returns {order: [segments]}."""
     dp = _dirpath(dirname, variant)
-    fitsfile = dp / f"cr2res_obs_nodding_extracted{nod}_tellcorr.fits"
+    fitsfile = dp / f"{dp.name}_tellcorr{nod}.fits"
     if not fitsfile.exists():
         return {}
 
@@ -653,7 +653,7 @@ def observation(request: Request, dirname: str, variant: str = Query(None)):
     images = sorted(p.name for p in dp.glob("*.png")) if dp.exists() else []
     downloads = sorted(
         p.name for p in dp.iterdir()
-        if p.name.endswith("_tellcorr.fits")
+        if p.name.endswith(("_tellcorrA.fits", "_tellcorrB.fits"))
     ) if dp.exists() else []
 
     # extract flat directory from calib.sof (or nodd.sof for older layouts)

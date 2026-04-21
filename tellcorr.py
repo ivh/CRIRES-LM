@@ -352,12 +352,13 @@ def process_one(input_fits, oset=None):
             out_hdul.append(new_table)
 
         stem = inpath.stem
-        outpath = inpath.parent / f"{stem}_tellcorr.fits"
+        ab = 'A' if 'extractedA' in stem else 'B'
+        dirname = inpath.parent.name
+        outpath = inpath.parent / f"{dirname}_tellcorr{ab}.fits"
         out_hdul.writeto(outpath, overwrite=True)
         print(f"  Wrote {outpath}")
 
         # save par.dat and xcen as sidecar for wavecorr.py
-        ab = 'A' if 'extractedA' in stem else 'B'
         pardat_out = inpath.parent / f"tellfit_{ab}.par.dat"
         shutil.copy2(pardat, pardat_out)
 
@@ -505,8 +506,9 @@ def replot(dir_path):
     dir_path = Path(dir_path).resolve()
     ext_a = dir_path / 'cr2res_obs_nodding_extractedA.fits'
     ext_b = dir_path / 'cr2res_obs_nodding_extractedB.fits'
-    tc_a = dir_path / 'cr2res_obs_nodding_extractedA_tellcorr.fits'
-    tc_b = dir_path / 'cr2res_obs_nodding_extractedB_tellcorr.fits'
+    dirname = dir_path.name
+    tc_a = dir_path / f'{dirname}_tellcorrA.fits'
+    tc_b = dir_path / f'{dirname}_tellcorrB.fits'
     for f in [ext_a, ext_b, tc_a, tc_b]:
         if not f.exists():
             raise FileNotFoundError(f"Missing {f}")

@@ -268,7 +268,7 @@ ls reduced/*/nodd.sof | parallel -j 4 --bar 'cd {//} && esorex --recipe-config=.
 ```
 To skip already-completed dirs, filter before piping to parallel:
 ```
-ls reduced/*/nodd.sof | sed 's|/nodd.sof||' | while read d; do [ -e "$d/cr2res_obs_nodding_extractedA_tellcorr.fits" ] || echo "$d"; done | parallel -j 6 --bar 'cd {} && esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof 2>&1 > esorex.log && cd ../.. && uv run tellcorr.py {} && uv run wavecorr.py {}'
+ls reduced/*/nodd.sof | sed 's|/nodd.sof||' | while read d; do [ -e "$d/$(basename $d)_tellcorrA.fits" ] || echo "$d"; done | parallel -j 6 --bar 'cd {} && esorex --recipe-config=../../cr2res_obs_nodding.rc cr2res_obs_nodding nodd.sof 2>&1 > esorex.log && cd ../.. && uv run tellcorr.py {} && uv run wavecorr.py {}'
 ```
 
 ## Telluric correction script (`tellcorr.py`)
@@ -279,8 +279,8 @@ ls reduced/*/nodd.sof | sed 's|/nodd.sof||' | while read d; do [ -e "$d/cr2res_o
 - Runs vipere in a temp directory, reconstructs model from residuals, writes corrected FITS + diagnostic plots
 
 ### Output files per directory
-- `cr2res_obs_nodding_extractedA_tellcorr.fits` — corrected A spectrum
-- `cr2res_obs_nodding_extractedB_tellcorr.fits` — corrected B spectrum
+- `{dirname}_tellcorrA.fits` — corrected A spectrum
+- `{dirname}_tellcorrB.fits` — corrected B spectrum
 - `tellcorrAB_{NN}.png` — one diagnostic plot per spectral order (3 chips together)
 
 ### Output FITS columns (per order, per chip extension)

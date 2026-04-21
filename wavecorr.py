@@ -291,7 +291,7 @@ def process_dir(dir_path):
         old_png.unlink()
 
     for ab in ['A', 'B']:
-        tellcorr = dir_path / f'cr2res_obs_nodding_extracted{ab}_tellcorr.fits'
+        tellcorr = dir_path / f'{dir_path.name}_tellcorr{ab}.fits'
         pardat = dir_path / f'tellfit_{ab}.par.dat'
         xcen = dir_path / f'tellfit_{ab}_xcen.json'
 
