@@ -39,18 +39,17 @@
 \date{March 2026}
 
 \abstract{
-The high-resolution near-infrared spectrograph \crires{} at ESO VLT covers the bands
-Y, J, H, K, L and M. The U-Ne and Fabry-Pérot calibration light sources however only work until the K-band,
+The high-resolution near-infrared spectrograph \crires{} at ESO VLT covers the
+Y, J, H, K, L and M bands. The U-Ne and Fabry-Pérot calibration light sources, however, only work up to the K-band,
 leaving the bands L and M without wavelength calibration, and without a way to
-measure the incline of the long slit relative to the detector frame.
-This makes CRIRES L/M data difficult to use, as is witnessed
-both by the low publication fraction of data taken, and the fact that LM data
-is not included in the reduced science products in the ESO archive.
-
-To remedy this, we present here an uniformly reprocessed archive of all public \crires{} L-band
+measure the inclination of the long slit relative to the detector frame.
+This has made L/M data awkward to use, reflected both in the low publication fraction
+ and in their absence from ESO's reduced science products.
+ 
+To remedy this, we present here a uniformly reprocessed archive of all public \crires{} L-band
 (2.8--4.2\,\um) and M-band (4.4--5.5\,\um) science observations obtained
 since the instrument upgrade (September 2021) until March 2025, totalling 11\,131 raw frames
-across 16 wavelength settings. We make extensive use of the telluric modelling tool \viper\ 
+across 16 wavelength settings. We use the telluric modelling tool \viper\ 
 that fits a model to the plethora of atmospheric absorption features that exist around these
 wavelengths. 
 To calibrate the slit tilt, we select observations of telluric standards
@@ -121,8 +120,8 @@ and the limitations, and highlight some examples.
 We query the ESO archive for all \crires{} science frames with
 wavelength settings in the L- and M-bands, covering the period from
 September 2021 (first \crires{} science operations) through March 2025. The proprietary
-period for \crires{} observations is 1 year, we can hence only access and reduce
-public data older than 1 year.
+period for \crires{} observations is 1 year, so we can only access and reduce
+public data older than that.
 This yields 11\,131 raw frames from 68 programmes observing 156 distinct
 targets across 16 wavelength settings (Table~\ref{tab:settings}).
 
@@ -264,8 +263,8 @@ We choose to ignore the change in tilt within each detector-order
 and adopt a single value for each. While the intra-order change is clearly
 visible in Fig.~\ref{fig:slittilt}, it proves difficult to derive reliably for
 the orders with weak telluric features. The ``fixed tilt'' for each
-order already captures the bulk of the improvement over previous 
-``no tilt''.
+order already captures the bulk of the improvement over the previous 
+``no tilt'' assumption.
 
 %--------------------------------------------------------------------
 \subsection{Better default wavelengths}
@@ -276,15 +275,15 @@ wavelength solutions. For traces where the fit converged well
 (percentage RMS residual $< 10$ and wavelength shift from the pipeline
 solution $< 10$\,\kms), we let the \vipere{} polynomial replace the old static
  calibration in the tracing table. This applies to 225 out of
-311 traces (72\%). The remaining traces, typically at the longest M-band
-wavelengths where telluric features are weak or in the CO$_2$ gap, we retain
-the pipeline wavelength solution until later.
+311 traces (72\%). For the remaining traces, where telluric features are weak
+or block all light like in the CO$_2$ gap, we retain
+the pipeline wavelength solution for now.
 
-At this stage, we also removed some redundant duplicate traces, and partial ones
+At this stage, we also remove some redundant duplicate traces, and partial ones
 that were cut at the detector edges from the trace table files (\texttt{*\_tw.fits}).
 
 %--------------------------------------------------------------------
-\subsection{Calibrations, flats are all you need}
+\subsection{Calibrations: flats are all you need}
 \label{sec:calibs}
 
 
@@ -299,10 +298,9 @@ that were cut at the detector edges from the trace table files (\texttt{*\_tw.fi
 \end{figure}
 
 Since there are no wavelength calibration lamp sources, and the detector
-background gets subtracted together with the sky when we subtract
- the nodding A and B frames from each other, there only remain the
- flat-fields to be reduced and applied.
-These are however essential for several reasons. Data with good
+background is subtracted together with the sky when we difference
+ the  A and B nod frames, only the flat-fields remain to be reduced and applied.
+These are, however, essential for several reasons. Data with good
 SNR needs flat-fields of matching depth to achieve the expected noise levels, as 
 Fig.~\ref{fig:flatcomp} clearly illustrates by showing a spectrum before and after
 flat-fielding. 
@@ -315,27 +313,28 @@ as bad, thus providing the bad pixel map (BPM) for the science reduction.
 
 
 The \crires\ team takes deep flat-fields with high NDIT (20, 50 or 100)
-from time to time. In order to never limit the science products' SNR, we
+from time to time. To avoid ever limiting the science products' SNR, we
 download only these sets of flat-fields (not the daily ones) for all the L/M settings.
 We then reduce them with \texttt{cr2res\_cal\_flat}, passing the updated
-slit tilt information as input. The nearest-in-time set
-of flats we associate to each observation set, and prepare the set-of-files (SOF) for the
+slit tilt information as input. We associate the nearest-in-time set
+  of flats with each observation, and prepare the set-of-files (SOF) for the
 science reduction accordingly. Each set of flat-fields has its own page 
 at the archive website, and each reduced observation links to the
 page of the flat-field used.
 
-Even though the HAWAII2RG detectors are known to have a non-linear
-response starting below 10\,000 ADU ($\approx $ 20\,000 electrons), we do not
+Even though the HAWAII2RG detectors are known to start deviating from linear response
+already below 10\,000 ADU ($\approx $ 20\,000 electrons), we do not
 apply the instrument's standard non-linearity calibration, for two reasons. First, since
 \crires\ cannot illuminate its detectors fully and evenly, this calibration is taken
 with a large number of flat-field frames, and still does not reach high SNR everywhere, leaving
-a risk to degrade data quality. Second, except for very bright targets
-the exposure times  in L and M are limited by the high sky background, that 
-gets removed by the subtraction the nodding A and B frames from each other.
+a risk to degrade data quality. 
+
+Second, except for very bright targets, L/M exposure times are capped by the high sky background, that 
+gets removed by the subtraction of the nodding A and B frames from each other.
 Thus, the exposure level of continuum and the trough of spectral lines usually
-corresponds only to a small fraction of the full dynamic range of the detectors.
+correspond only to a small fraction of the full dynamic range of the detectors.
 Nevertheless, we encourage users that intend to, for example, analyse the line shapes
-of the strongest spectral features in the brightest of targets, to look into
+of the strongest spectral features in the brightest targets, to look into
 applying an average non-linearity correction themselves.
 
 %--------------------------------------------------------------------
@@ -351,8 +350,7 @@ ${\sim}50$ pixels. The instrument therefore has a metrology routine that
 measures the positions of known lines and adjusts the wheel to the 
 reference position.
 
-Some %dumbass
-observers however prefer to save on overhead time and skip the metrology,
+Some observers, however, prefer to save on overhead time and skip the metrology,
 leaving the traces offset from calibrations.
 We correct for this by searching for the integer Y-shift that
 maximizes the total flux contained within the order boundaries of the
@@ -405,17 +403,6 @@ the archive website.
 %--------------------------------------------------------------------
 \subsection{Telluric correction}
 \label{sec:tellcorr}
-
-We emphasise that \vipere{} is used here primarily as a wavelength-calibration
-tool: the forward-model fit pins the wavelength scale to the forest of
-atmospheric lines in each order, which is how we recover the L/M wavelength
-solution in the absence of usual wavelength calibration frames: Uranium-Neon and Fabry-Perot. 
-The byproduct telluric model is usable for initial inspection and works acceptably on our data 
-(see e.g Sect.~\Ref{sec:examples}, but it is not
-intended as a science-grade correction. Users with demanding
-telluric-cancellation needs should run their own tailored fits
-(e.g.\ \texttt{molecfit}) against the uncorrected spectrum, which is always
-recoverable as $\texttt{SPEC} \times \texttt{TELLUR}$.
 
 \vipere{} requires pre-computed atmospheric transmission templates for each
 molecule. The existing templates bundled with \vipere{} cover the visible
@@ -571,27 +558,37 @@ future reductions of data in these wavelength settings.
 
 We believe this data release is a significant improvement over what
 was hitherto available, for the vast majority of the included observations.
-One size does however not fit all, and there are a few caveats to be aware of.
+One size, however, does not fit all, and there are a few caveats to be aware of.
 
-The reductions carried out here assume there is a single target at the 
-nodding positions A and B, separated by the nod throw. 
+The reductions carried out here assume there is a single target at two 
+slit positions A and B separated by the nod throw. 
 The spectra get extracted there, collapsing
-all light in the extraction window with fixed height into a single spectrum.
+all light in the extraction window of fixed height (45 pix) into a single spectrum.
 Naturally, this
 is not useful for observations where spatial resolution along the slit is relevant,
 for example extended targets or binary stars with both companions in
 the slit.
 
-Spectral features that are both strong and so wide that they dominate
-the spectrum in the detector order that contains them, for example the
-Br-, can throw off
+We emphasise that \vipere{} is used here primarily as a wavelength-calibration
+tool: the forward-model fit pins the wavelength scale to the forest of
+atmospheric lines in each order, which is how we recover the L/M wavelength
+solution in the absence of usual wavelength calibration frames: Uranium-Neon and Fabry-Perot. 
+The byproduct telluric model is usable for initial inspection and works acceptably on our data 
+(see e.g Sect.~\Ref{sec:examples}, but it is not
+intended as a science-grade correction. Users with demanding
+telluric-cancellation needs should run their own tailored fits
+(e.g.\ \texttt{molecfit}) against the uncorrected spectrum, which is always
+recoverable as $\texttt{SPEC} \times \texttt{TELLUR}$.
+
+Additionally, spectral features that are both strong and so wide that they dominate
+the spectrum in the detector order that contains them, for example Br$\alpha$, can throw off
 the continuum fit of \viper\, in the sense that the continuum gets wrongly
 pulled to match part of the line. This is generally quite obvious from the telluric model and the
 residuals, and needs to be remedied by re-fitting the continuum without
 the spectral feature.
 
 As mentioned above (\S \ref{sec:extraction}),
- data taken without metrology can be partially cut-off by the flat-field.
+ data taken without metrology can be partially cut off by the flat-field.
  
 No non-linearity correction was applied to the spectra, cf.~\S \ref{sec:calibs}.
 
@@ -599,23 +596,23 @@ No non-linearity correction was applied to the spectra, cf.~\S \ref{sec:calibs}.
 \subsection{Use of AI tools}
 \label{sec:ai}
 
-Claude Opus 4.6 \citep{claude_opus46} has been used extensively in this project
-which would not have happened without it, since it turned this work into a matter of days rather than weeks.
+Claude Opus 4.6 \citep{claude_opus46} was used extensively in this project --
+it would not have happened without it, since the AI collaboration turned weeks
+of work into days.
 
-Under supervised
-guidance, Claude Code wrote and executed the scripts that carry out the aforementioned steps:
+With close supervision, Claude Code wrote and executed the scripts that carry out the aforementioned steps:
 \begin{itemize}
 \item query the ESO archive for all LM data and build a local SQLite database with meta-information
 \item retrieve the data from the ESO archive
 \item group data by nodding AB pairs and associate the nearest flat-field
-\item generate the SOF with filenames and tags for the cr2res recipes
+\item generate the SOF with filenames and tags for the \crtwores\ recipes
 \item measure the slit tilt from the telluric stars' A-B difference
 \item find the best shift in Y for the trace polynomials
 \item orchestrate the parallel runs of 10,000 pipeline reductions
-\item install and run \emph{molecfit} to generate the input atmospheric model for \viper
+\item install and run \texttt{molecfit} to generate the input atmospheric model for \viper
 \item carry out the telluric fits with vipere and plot the results
 \item aggregate the telluric fit results from all data to verify the slit tilt
-\item analyze the wavelength precision by comparing the the telluric fits from all observations
+\item analyse the wavelength precision by comparing the telluric fits from all observations
 \end{itemize}
 
 In addition, the web-application that runs the data archive is entirely 
@@ -641,12 +638,13 @@ spectra are available, covering all 5649 nod pairs. Users can filter by target
 name, wavelength setting, or ESO programme ID.
 
 Each observation page shows an interactive spectrum plot (using Plotly)
-displaying the spectrum and the telluric model. Alongside there are
+displaying the spectrum and the telluric model. Alongside, there are
 several static plots that allow a quick first assessment of the data:
 \begin{itemize}
 \item The $|A-B|$ image for the 3 detectors, with the extraction window indicated as black/white dashed lines.
 \item Spectrum and telluric model for each order, plus residual.
-\item Wavelength correction, that is the velocity offset of each detector-order from the default wavelength solution. The black line, if present, indicates the fit to the good solutions to extrapolate to the indicated orders that did not get good telluric fits on the data.
+\item Wavelength correction, i.e.~the velocity offset of each detector-order from the default wavelength solution. 
+ The black line, if present, indicates the fit to the good solutions to extrapolate to the indicated orders that did not get good telluric fits on the data.
 \end{itemize}
 
 
@@ -667,15 +665,15 @@ reduction, which shows the normalized flat-field, the blaze functions and meta-d
 Lastly, a table lists all raw frames that went into the data presented at the current page.
 Clicking on an individual AB pair leads to the reduction page for that specific AB pair alone.
 
-The full reduction code, scripts, static input data, recipe parameter files, and the webapp is available from 
-the repository at 
+The full reduction code, scripts, static input data, recipe parameter files, and the webapp are
+ available from the repository at 
 \url{https://github.com/ivh/CRIRES-LM}. Reproducing this work should be as
-straight-forward as re-running the download and reduction scripts in the documented
+straightforward as re-running the download and reduction scripts in the documented
 order. On a machine with 32 cores, using GNU \texttt{parallel} \citep{tange_parallel}, this takes
 on the order of a day.
 
 Also in the repository, there are the updated trace table files
-(\texttt{*\_tw.fits}) with cleaned up traces, slit tilt and good default
+(\texttt{*\_tw.fits}) with cleaned-up traces, slit-tilt values and improved default
 wavelengths. These can be used as drop-in
 replacements for other data reductions, and are offered to ESO in the
 hope that they will ship with the next release of the cr2res pipeline. 
@@ -684,19 +682,25 @@ Part of the motivation for making this an arXiv-only paper is to allow for
 easy future updates, both in terms of adding data as more becomes
 public, and in terms of code and methods for when further improvements
 are found. The repository has a \emph{git tag} matching the arXiv-version of
-this paper, and we will add a change-log here for versions after this initial.
+this paper, and we will add a change-log here for versions after this initial one.
+
+To cite this work and the data, please use the arXiv number like
+ \texttt{astro-ph/YYMM.NNNNN}, the DOI \texttt{10.5281/zenodo.19675664}
+ for the reprocessed data, and/or the DOI \texttt{TODO} for the code repository
+ release that matches this version of the paper.
+ % TODO actually add the DOI link to the References
 
 %--------------------------------------------------------------------
 \section{Showcase examples}
 \label{sec:examples}
 
-The purpose of this work is not to analyze the improved spectra for scientific results,
-but to enable other researchers with the necessary expertise to easier exploit
+The purpose of this work is not to analyse the improved spectra for scientific results,
+but to enable other researchers with the necessary expertise to more easily exploit
 these hitherto neglected observations. Nevertheless, here are a few examples of
 what caught our eye when browsing the data.
 
 A striking feature in the M band is the $^{12}$CO $v=1\!-\!0$
-fundamental ro-vibrational band near 4.7\,\um{}, which falls in the CRIRES + M4368
+fundamental ro-vibrational band near 4.7\,\um{}, which falls into the M4368
 setting. In the star MWC~758, the CO is seen in emission on top of the deep
 telluric forest\footnote{\url{https://www.astro.uu.se/crires-lm/obs/MWC_758_M4368_2024-12-31_02310}} 
 (Fig.~\ref{fig:mwc758_CO}). Similar CO emission is visible in
