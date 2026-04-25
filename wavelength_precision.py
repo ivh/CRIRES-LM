@@ -426,7 +426,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
                    label=f'median={np.median(ab_rms[ok]):.0f} m/s')
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
-        ax.set_title(f'A-B difference scatter ({ok.sum()}/{len(ab_rms)} groups < 5 km/s)')
+        ax.set_title(f'A-B difference scatter')
         ax.legend()
 
     # 4. Inter-chip gap scatter distribution
@@ -439,7 +439,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
                    label=f'median={np.median(chip_rms[ok]):.0f} m/s')
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
-        ax.set_title(f'Inter-chip gap scatter ({ok.sum()}/{len(chip_rms)} groups < 5 km/s)')
+        ax.set_title(f'Inter-chip gap scatter')
         ax.legend()
 
     # 5. Inter-order gap scatter distribution
@@ -452,7 +452,7 @@ def plot_results(abs_data, chip_rms, order_rms, ab_rms):
                    label=f'median={np.median(order_rms[ok]):.0f} m/s')
         ax.set_xlabel('RMS scatter [m/s]')
         ax.set_ylabel('count (groups)')
-        ax.set_title(f'Inter-order gap scatter ({ok.sum()}/{len(order_rms)} groups < 5 km/s)')
+        ax.set_title(f'Inter-order gap scatter')
         ax.legend()
 
     # 6. Combined comparison: CDF of all four metrics

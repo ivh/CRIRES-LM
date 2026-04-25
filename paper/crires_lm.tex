@@ -89,7 +89,7 @@ with 5--9 echelle orders per chip.
 While the $YJHK$ bands of \crires{} are fully reduced and calibrated by
 the standard \crtwores{} pipeline \citep{cr2res} and included in ESO's
 Phase~3 data releases, the thermal infrared L-band (2.8--4.2\,\um) and
-M-band (4.4--5.5\,\um)\footnote{The M-band settings have wavelength coverage
+M-band (4.4--5.5\,\um)\footnote{The \crires\ M-band settings have wavelength coverage
  well into the L-band, as can be seen in Fig.~\ref{fig:slittilt}.}
  settings have only the flat-field calibration lamp
 available.
@@ -176,11 +176,11 @@ extraction (\S\,\ref{sec:extraction}), and telluric correction
 \subsection{Slit tilt calibration}
 \label{sec:tilt}
 
-The \crires{} slit is not aligned with the detector columns;
+The \crires{} slit image is not aligned with the detector columns;
 the resulting tilt is wavelength-dependent and, if uncorrected, causes
 spectral features to shift in wavelength as a function of position along
 the slit. For nodding observations, where the spectrum is extracted at
-two different slit positions, this introduces a systematic wavelength
+two different slit positions, igoring the tilt introduces a systematic wavelength
 offset between the A and B nod spectra. In addition, the spectral resolution
 gets degraded.
 In the L and M bands, the slit
@@ -222,7 +222,7 @@ M4519 & V*\,S\,CrA & T\,Tauri & 0\farcs2 \\
 \end{tabular}
 \tablefoot{All standards are hot stars with featureless L/M-band continua,
   except M4519 where V*\,S\,CrA is the only available target; its
-  \vipere{} fits are adequate but noisier.}
+  \viper{} fits are adequate but noisier.}
 \end{table}
 
 We calibrate the slit tilt using a dedicated telluric standard star for
@@ -236,7 +236,9 @@ then fit the extracted A and B spectra independently with \vipere{}\footnote{\ur
 a fork of the \texttt{viper}\footnote{\url{https://github.com/mzechmeister/viper}}
 tool \citep{viper} that simultaneously fits the
 telluric absorption, wavelength solution, continuum, and instrumental
-profile. The key output for our purpose is the wavelength polynomial per detector order and
+profile. \footnote{In the following, to avoid confusion, we write \viper\ instead of \vipere\ since
+the tellutic fitting routine originates in the former.}
+The key output for our purpose is the wavelength polynomial per detector order and
 per nod position.
 
 The slit tilt at each pixel is then computed as the wavelength difference
@@ -270,10 +272,10 @@ order already captures the bulk of the improvement over the previous
 \subsection{Better default wavelengths}
 \label{sec:defaultwave}
 
-The \vipere{} fits to the telluric standards produce
+The \viper{} fits to the telluric standards produce
 wavelength solutions. For traces where the fit converged well
 (percentage RMS residual $< 10$ and wavelength shift from the pipeline
-solution $< 10$\,\kms), we let the \vipere{} polynomial replace the old static
+solution $< 10$\,\kms), we let the \viper{} polynomial replace the old static
  calibration in the tracing table. This applies to 225 out of
 311 traces (72\%). For the remaining traces, where telluric features are weak
 or block all light like in the CO$_2$ gap, we retain
@@ -301,13 +303,13 @@ Since there are no wavelength calibration lamp sources, and the detector
 background is subtracted together with the sky when we difference
  the  A and B nod frames, only the flat-fields remain to be reduced and applied.
 These are, however, essential for several reasons. Data with good
-SNR needs flat-fields of matching depth to achieve the expected noise levels, as 
+signal-to-noise ratio (SNR) needs flat-fields of matching depth to achieve the expected noise levels, as 
 Fig.~\ref{fig:flatcomp} clearly illustrates by showing a spectrum before and after
 flat-fielding. 
 
 In addition, we pass the blaze function that \texttt{cr2res\_cal\_flat} produces
 on to the science recipe. This does not fully normalize the continuum but
-generally straightens it enough to make it easier for \vipere\ to do its fit. Lastly,
+generally straightens it enough to make it easier for \viper\ to do its fit. Lastly,
 outliers in the flat-field, with normalized sensitivity below 0.8 or above 1.2, get flagged
 as bad, thus providing the bad pixel map (BPM) for the science reduction.
 
@@ -386,7 +388,7 @@ the archive website.
 \begin{figure*}
   \centering
   \includegraphics[width=\textwidth]{figs/wavelength_precision.pdf}
-  \caption{Wavelength precision of the \vipere{} fits to science spectra,
+  \caption{Wavelength precision of the \viper{} fits to science spectra,
     assessed via four metrics. \emph{Top left:} absolute repeatability of
     the wavelength at pixel~1024 per (setting, chip, order) group, with
     symbol size proportional to the number of measurements.
@@ -404,9 +406,9 @@ the archive website.
 \subsection{Telluric correction}
 \label{sec:tellcorr}
 
-\vipere{} requires pre-computed atmospheric transmission templates for each
-molecule. The existing templates bundled with \vipere{} cover the visible
-through K~band. We generate L- and M-band templates from the
+\viper{} requires pre-computed atmospheric transmission templates for each
+molecule. The existing templates bundled with \viper{} covered the visible
+through K~band. We therefore generate L- and M-band templates from the
 \texttt{molecule\_atlas\_UVB-MIR.fits} included in the \texttt{molecfit}
 v4.4.2 calibration data \citep{molecfit}, which contains per-molecule
 transmission spectra from 0.29 to 30\,$\mu$m 
@@ -416,9 +418,9 @@ Paranal atmosphere at zenith.
 We extract the relevant wavelength ranges
 (2.5--4.2\,$\mu$m for L, 4.2--5.5\,$\mu$m for M) and the dominant
 absorbing species (H$_2$O, CH$_4$, CO$_2$, N$_2$O, CO, O$_3$) into
-separate FITS tables matching the format of the existing \vipere{} templates.
+separate FITS tables matching the format of the existing \viper{} templates.
 
-Each extracted science spectrum is then fitted with \vipere{}, which models
+Each extracted science spectrum is then fitted with \viper{}, which models
 the observed spectrum as a continuum polynomial multiplied by the
 convolved atmospheric transmission.  The telluric transmission model is
 reconstructed from the fit residuals as
@@ -426,15 +428,15 @@ $T = (\mathrm{observed} - \mathrm{residual}) / C$, where $C$ is the
 fitted continuum. The corrected spectrum is then
 $S_\mathrm{corr} = S_\mathrm{obs} / T$.
 
-For orders where the \vipere{} fit fails (e.g.\ the CO$_2$-saturated
+For orders where the \viper{} fit fails (e.g.\ the CO$_2$-saturated
 region near 4.26\,\um), the original uncorrected spectrum is retained
 with the telluric transmission column set to NaN.
 
-Wavelengths in the output spectra are updated using the \vipere{} fit
+Wavelengths in the output spectra are updated using the \viper{} fit
 where available. For detector orders without a successful fit (due to weak
 telluric features, the CO$_2$-saturated region, or low signal-to-noise),
 the wavelength scale is corrected by fitting a linear velocity offset
-$\Delta v(\lambda)$ to the differences between the \vipere{} and
+$\Delta v(\lambda)$ to the differences between the \viper{} and
 reference wavelengths of all well-fitted orders (percentage residual RMS
 $< 30$) across all three detector chips simultaneously. The three chips
 are at fixed relative positions in the focal plane, so the wavelength
@@ -452,18 +454,18 @@ with only two or three fitted orders per chip the surface was
 underconstrained, and quadratic extrapolation to edge orders produced
 wavelengths off by factors of several. Fitting a velocity \emph{correction}
 across all chips avoids this because the corrections are small and smooth,
-keeping extrapolation errors bounded.
+keeping extrapolation errors limited.
 
-The precision of the \vipere{} wavelength solution on science data is
+The precision of the \viper{} wavelength solution on science data is
 assessed using four complementary metrics (Fig.~\ref{fig:wlprecision}).
-Since \vipere{} fits each detector segment independently, the rigid
+Since \viper{} fits each detector segment independently, the rigid
 mechanical coupling between the three \crires{} detectors provides a
 built-in consistency check: the wavelength gap between chip centres at a
 given echelle order is a physical constant, so its scatter across
 observations measures the fit repeatability. Analogous gaps between
 adjacent orders on the same chip provide an independent check. Most
 directly, the A and B nod positions of each observation receive
-independent \vipere{} fits to the same telluric spectrum; their
+independent \viper{} fits to the same telluric spectrum; their
 wavelength difference at a given pixel should be constant (reflecting the
 slit tilt) with scatter determined only by fit noise.
 
@@ -518,11 +520,11 @@ tilt.
   \centering
   \includegraphics[width=\columnwidth]{figs/tw_comparison_M4318.pdf}
   \caption{Velocity offset between the reference tracing table
-    wavelengths and the median science \vipere{} solution for the M4318
+    wavelengths and the median science \viper{} solution for the M4318
     setting, shown as a representative example. Each curve segment
     corresponds to one detector order, coloured by chip (blue: CHIP1,
     orange: CHIP2, green: CHIP3). Dotted segments mark orders that retained
-    pipeline wavelengths; solid segments have \vipere{} wavelengths from
+    pipeline wavelengths; solid segments have \viper{} wavelengths from
     the telluric standard. The red line is the linear fit used to correct
     the tracing table. The shaded bands show the uncertainty of the
     median.}
@@ -531,9 +533,9 @@ tilt.
 
 
 Once all science spectra are processed, we use the aggregate
-\vipere{} wavelength solutions to refine the reference tracing tables
+\viper{} wavelength solutions to refine the reference tracing tables
 themselves. For each wavelength setting, we compare the default
-wavelength polynomial to the median science \vipere{} solution per
+wavelength polynomial to the median science \viper{} solution per
 detector order, evaluated at pixel~1024 from all observations passing
 the quality filter. The resulting velocity offsets follow a smooth linear
 trend with wavelength within each setting, reaching $-$2 to
@@ -569,7 +571,7 @@ is not useful for observations where spatial resolution along the slit is releva
 for example extended targets or binary stars with both companions in
 the slit.
 
-We emphasise that \vipere{} is used here primarily as a wavelength-calibration
+We emphasise that \viper{} is used here primarily as a wavelength-calibration
 tool: the forward-model fit pins the wavelength scale to the forest of
 atmospheric lines in each order, which is how we recover the L/M wavelength
 solution in the absence of usual wavelength calibration frames: Uranium-Neon and Fabry-Perot. 
@@ -610,7 +612,7 @@ With close supervision, Claude Code wrote and executed the scripts that carry ou
 \item find the best shift in Y for the trace polynomials
 \item orchestrate the parallel runs of 10,000 pipeline reductions
 \item install and run \texttt{molecfit} to generate the input atmospheric model for \viper
-\item carry out the telluric fits with vipere and plot the results
+\item carry out the telluric fits with \viper\ and plot the results
 \item aggregate the telluric fit results from all data to verify the slit tilt
 \item analyse the wavelength precision by comparing the telluric fits from all observations
 \end{itemize}
@@ -625,6 +627,39 @@ the results.
 The first draft of some sections of this paper was also written in collaboration with Claude, often
 as the summary of the analysis session that produced the results.
 The text was then edited and checked for correctness by the authors.
+
+%--------------------------------------------------------------------
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/mwc758_CO.pdf}
+  \caption{$^{12}$CO $v=1\!-\!0$ fundamental P-branch toward the Herbig\,Ae
+    transition-disk star MWC\,758 (M4368, order 04, spanning the three
+    detector chips). Each panel shows the observed spectrum (black) with the
+    \viper\ forward model of the telluric transmission times the
+    fitted stellar continuum overlaid (red), plus the telluric-corrected
+    spectrum (blue, offset vertically for clarity). Narrow CO emission peaks
+    from the inner disk stand out cleanly above the atmospheric absorption
+    after correction.}
+  \label{fig:mwc758_CO}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/vwcha_CO.pdf}
+  \caption{Same as Fig.~\ref{fig:mwc758_CO} but for the classical T Tauri
+    star VW\,Cha.}
+  \label{fig:vwcha_CO}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\columnwidth]{figs/gqlup_CO.pdf}
+  \caption{Same as Fig.~\ref{fig:mwc758_CO} but for the classical T Tauri
+    star GQ\,Lup.}
+  \label{fig:gqlup_CO}
+\end{figure}
+
 
 
 %--------------------------------------------------------------------
@@ -723,36 +758,6 @@ All of these spectra can be browsed and downloaded from the project website.
 
 \begin{figure}
   \centering
-  \includegraphics[width=\columnwidth]{figs/mwc758_CO.pdf}
-  \caption{$^{12}$CO $v=1\!-\!0$ fundamental P-branch toward the Herbig\,Ae
-    transition-disk star MWC\,758 (M4368, order 04, spanning the three
-    detector chips). Each panel shows the observed spectrum (black) with the
-    \texttt{vipere} forward model of the telluric transmission times the
-    fitted stellar continuum overlaid (red), plus the telluric-corrected
-    spectrum (blue, offset vertically for clarity). Narrow CO emission peaks
-    from the inner disk stand out cleanly above the atmospheric absorption
-    after correction.}
-  \label{fig:mwc758_CO}
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\columnwidth]{figs/vwcha_CO.pdf}
-  \caption{Same as Fig.~\ref{fig:mwc758_CO} but for the classical T Tauri
-    star VW\,Cha.}
-  \label{fig:vwcha_CO}
-\end{figure}
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\columnwidth]{figs/gqlup_CO.pdf}
-  \caption{Same as Fig.~\ref{fig:mwc758_CO} but for the classical T Tauri
-    star GQ\,Lup.}
-  \label{fig:gqlup_CO}
-\end{figure}
-
-\begin{figure}
-  \centering
   \includegraphics[width=\columnwidth]{figs/gqlup_winds.pdf}
   \caption{Br$\alpha$ at 4.052\,\um{} in GQ\,Lup, in
     order 06 of the same M4368 observation as Fig.~\ref{fig:gqlup_CO}.}
@@ -783,8 +788,8 @@ All of these spectra can be browsed and downloaded from the project website.
 We reprocessed all 11\,131 public \crires{} L- and M-band science
 frames from the ESO archive into 5649 telluric-corrected nod-pair spectra
 covering 156 targets across 16 wavelength settings. The reprocessing
-includes slit tilt and wavelength calibration from telluric standard fits,
-and per-observation forward-model telluric and wavelength correction.
+includes slit tilt from telluric standard fits, and wavelength calibration
+from per-observation telluric correction.
 The resulting archive is browsable and downloadable at
 \url{https://www.astro.uu.se/crires-lm/}.
 
