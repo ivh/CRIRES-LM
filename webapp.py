@@ -742,4 +742,5 @@ if __name__ == "__main__":
     p.add_argument("--root-path", default="")
     args = p.parse_args()
     uvicorn.run("webapp:app", host="0.0.0.0", port=args.port,
-                reload=args.reload, root_path=args.root_path)
+                reload=args.reload, root_path=args.root_path,
+                proxy_headers=True, forwarded_allow_ips="*")
