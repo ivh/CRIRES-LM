@@ -2,47 +2,39 @@
 
 Bulk reduction of all public CRIRES+ L-band (2.8--4.2 um) and M-band (4.4--5.5 um) science data from the ESO archive (September 2021 through March 2025), with improved slit tilt calibration and per-observation telluric correction using [vipere](https://git.astro.lavail.net/alexis/vipere) (a fork of [viper](https://github.com/mzechmeister/viper)).
 
-## Approach
+- **Paper:** [arXiv:2604.24466](https://arxiv.org/abs/2604.24466) — Marquart & Lavail (2026)
+- **Data browser:** <https://www.astro.uu.se/crires-lm/>
+- **Data archive (Zenodo):** [10.5281/zenodo.19675664](https://doi.org/10.5281/zenodo.19675664)
+- **Code snapshot (Zenodo):** [10.5281/zenodo.19754514](https://doi.org/10.5281/zenodo.19754514)
 
-The standard CRIRES+ pipeline (`cr2res`) does not account for slit tilt in L/M bands, and ships no telluric correction. We use vipere in two stages:
+The paper describes the calibration approach, data products, and known limitations. This repository contains the scripts that produce the archive and the corrected `*_tw.fits` tracing tables (slit tilt + improved wavelength solutions) that can be used as drop-in inputs for custom `cr2res` reductions.
 
-### Stage 1: Calibration from telluric standards
+## Citation
 
-For each of the 16 wavelength settings, we reduce one telluric standard star (hot B/O-type) observed at nod positions A and B.
-Vipere fits a forward model of telluric absorption + wavelength solution to each nod position independently.
-The A vs B wavelength difference at each pixel directly measures the slit tilt, since the two nod positions sample different spatial positions on the slit.
+If you use these data or scripts, please cite:
 
-From these measurements:
+```bibtex
+@article{marquart2026crireslm,
+  author        = {Marquart, Thomas and Lavail, Alexis},
+  title         = {An archive of reduced and telluric-corrected CRIRES$^+$
+                   L- and M-band spectra with slit-tilt and wavelength calibrations},
+  journal       = {arXiv e-prints},
+  year          = {2026},
+  eprint        = {2604.24466},
+  archivePrefix = {arXiv},
+  primaryClass  = {astro-ph.IM},
+  url           = {https://arxiv.org/abs/2604.24466}
+}
 
-- **Slit tilt**: fit a linear tilt(wavelength) relation per band, interpolating across the CO2 gap at 4.2--4.5 um where no telluric fit is possible. Written into the `SlitPolyB` column of the tracing tables (`*_tw.fits`).
-- **Wavelength calibration**: vipere wavelength polynomials replace the pipeline solution for 72% of traces; the remainder keep pipeline wavelengths (mostly orders with weak/no telluric features).
-- **Aggregate wavelength refinement**: after all science reductions, the median vipere wavelength from all observations is compared to the tracing table per (setting, chip, order). A linear velocity offset vs wavelength is fit per setting and applied as a multiplicative correction to all polynomial coefficients, removing systematic offsets of 1--8 km/s.
-- **Nod throw**: actual throw measured from spatial profiles (2--3% larger than commanded).
-
-### Stage 2: Science reduction with telluric correction
-
-Before extraction, the trace positions are adjusted per observation to account for instrument flexure: `adjust_traces.py` cross-correlates the spatial profile of each raw frame against the reference trace boundaries to measure the Y-shift (typically 5--10 pixels, up to ~50 in rare cases) and writes a corrected tracing table into each reduction directory.
-
-The pipeline-provided tracing tables (`*_tw.fits`) have been cleaned of spurious edge traces that the pipeline's tracing algorithm occasionally creates for partial orders at detector boundaries. These duplicate traces poison the `SlitFraction` metadata, preventing extraction of valid orders (affected settings: M4211, M4461, M4504).
-
-All 5649 AB pairs are then reduced with `esorex cr2res_obs_nodding` using these adjusted tracing tables (with slit tilt and updated wavelengths) and the nearest-in-time flat field and blaze function. Each observation is reduced twice: once as a combined average of all frames from the same template sequence, and once as individual AB pairs. In addition, reductions without flat-fielding are provided as a fallback for cases where the vertical offset between flat and science is too large for one of the nod positions.
-
-Then `tellcorr.py` runs vipere on each extracted spectrum to fit and divide out the telluric absorption, followed by `wavecorr.py` which updates the wavelength scale: fitted orders get the vipere wavelength polynomial directly, while unfitted orders (no telluric features, CO2-saturated regions) receive a velocity correction interpolated from a linear fit to the vipere corrections across all three chips.
-
-The reduced and telluric-corrected spectra are browsable and downloadable via a [web app](https://www.astro.uu.se/crires-lm/).
-
-## Web app
-
-The data browser shows all observations that have telluric-corrected spectra. The front page table is filterable by target, setting, and programme, and sortable by clicking column headers.
-
-Each observation page shows the combined per-template spectrum (interactive Plotly plot), diagnostic plots, and download links for the `_tellcorr.fits` files. The raw frames table groups frames into AB pairs; clicking a pair navigates to the individual pair reduction, which has its own spectrum, plots, and downloads.
-
-## Data scale
-
-- 16 wavelength settings (L3244--L3426, M4187--M4519), 5--7 echelle orders per chip, 3 chips
-- 11,131 raw science frames from the ESO archive, forming 5649 AB nod pairs across 412 observing sequences
-- 233 flat field epochs across 16 settings, each matched to the nearest-in-time science observation
-- Combined per-template spectra for all sequences
+@misc{crires_lm_data,
+  author       = {Marquart, Thomas and Lavail, Alexis},
+  title        = {{CRIRES+ L/M-band reprocessed spectra}},
+  howpublished = {Zenodo},
+  year         = {2026},
+  doi          = {10.5281/zenodo.19675664},
+  url          = {https://doi.org/10.5281/zenodo.19675664}
+}
+```
 
 ## Repository structure
 
@@ -54,6 +46,7 @@ cr2res_cal_flat.rc     esorex recipe config for flats
 flats/                 flat field data: {setting}_{date}/ subdirs with SOFs and output
 tellurics/             telluric standard reductions, tilt + wavecal scripts
 templates/             HTML templates for the inspection webapp
+paper/                 LaTeX source of the paper
 ```
 
 Raw data, reduced products, and FITS outputs are not included (too large); they live on disk and can be regenerated from the scripts + ESO archive.
